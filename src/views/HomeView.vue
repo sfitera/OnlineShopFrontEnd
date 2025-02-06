@@ -1,9 +1,17 @@
-<script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
+<template>
+  <div>
+    <h1>Welcome to the Online Shop!</h1>
+  </div>
+</template>
+
+<script lang="ts">
+export default {
+  name: 'HomePage',
+}
 </script>
 
-<template>
-  <main>
-    <TheWelcome />
-  </main>
-</template>
+<style scoped>
+h1 {
+  color: #42b983;
+}
+</style>
