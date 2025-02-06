@@ -7,6 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <nav>
       <RouterLink to="/">Home</RouterLink>
       <RouterLink to="/about">About</RouterLink>
+      <RouterLink to="/products/">Products</RouterLink>
     </nav>
   </header>
 
@@ -14,19 +15,3 @@ import { RouterLink, RouterView } from 'vue-router'
     <RouterView />
   </main>
 </template>
-
-<style scoped>
-header {
-  background-color: #f8f9fa;
-  padding: 1rem;
-}
-
-nav {
-  display: flex;
-  gap: 1rem;
-}
-
-main {
-  padding: 2rem;
-}
-</style>
