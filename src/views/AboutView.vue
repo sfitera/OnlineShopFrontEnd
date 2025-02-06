@@ -1,15 +1,17 @@
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
+  <div>
+    <h1>Welcome to the Online Shop!</h1>
   </div>
 </template>
 
-<style>
-@media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
+<script lang="ts">
+export default {
+  name: 'HomePage',
+}
+</script>
+
+<style scoped>
+h1 {
+  color: #42b983;
 }
 </style>
