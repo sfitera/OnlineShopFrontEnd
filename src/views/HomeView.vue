@@ -7,7 +7,7 @@
     <div v-else-if="error">{{ error }}</div>
     <ul v-else>
       <li v-for="product in products" :key="product.id">
-        {{ product.name }} - {{ product.price }} €
+        {{ product.productName }} - {{ product.productPrice }} €
       </li>
     </ul>
   </section>
@@ -15,25 +15,19 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import apiClient from '@/services/apiService';
-
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-}
+import { Product } from '@/models/Product';
+import { ProductService } from '@/services/ProductService';
 
 const products = ref<Product[]>([]);
 const loading = ref<boolean>(true);
 const error = ref<string | null>(null);
 
 onMounted(async () => {
+  const productService = new ProductService();
   try {
-    const response = await apiClient.get('/products');
-    products.value = response.data;
+    products.value = await productService.getProducts();
   } catch {
-  error.value = 'Nepodarilo sa načítať produkty.';
+    error.value = 'Nepodarilo sa načítať produkty.';
   } finally {
     loading.value = false;
   }
