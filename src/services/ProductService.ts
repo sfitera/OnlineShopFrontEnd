@@ -13,4 +13,13 @@ export class ProductService {
     });
     return response.data;
   }
+
+  async getProductById(id: number): Promise<Product> {
+    const response = await axios.get(`${productUrl}${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  }
 }

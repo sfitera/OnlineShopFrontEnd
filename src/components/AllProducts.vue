@@ -2,7 +2,9 @@
 <h1>My Products</h1>
 <ul v-if="!loading">
   <li v-for="product in products" :key="product.id">
-    <div>{{ product.productName }}</div>
+    <RouterLink :to="`/products/${product.id}`">
+          {{ product.productName }}
+        </RouterLink>
     <div>{{ product.productPrice }} €</div>
     <div>{{ product.productDescription }}</div>
   </li>
