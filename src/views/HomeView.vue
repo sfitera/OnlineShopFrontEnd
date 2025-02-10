@@ -14,13 +14,12 @@
           <RouterLink :to="`/products/${product.id}`">
           <p>{{ product.productName }}</p>
           </RouterLink>
-          <p>{{ product.productPrice }} €</p>
+          <p>{{ product.productPrice.toFixed(2) }} €</p>
           <p v-if="product.productQuantity === 0" class="out-of-stock">Nedostupné</p>
           <p v-else-if="product.productQuantity > 0">
             <button v-if="!cartStatus[product.id]" @click="addToCart(product)">Pridať do košíka</button>
               <p v-else class="text-green-500">Pridané do košíka!</p>
           </p>
-
         </div>
     </div>
   </section>
@@ -32,6 +31,7 @@ import { Product } from '@/models/Product';
 import { ProductService } from '@/services/ProductService';
 import { OrderItem } from '@/models/OrderItem';
 import { OrderItemService } from '@/services/OrderItemService';
+import { cartStore } from '@/stores/cartStore';
 
 const products = ref<Product[]>([]);
 const loading = ref<boolean>(true);
@@ -51,17 +51,25 @@ const sortedProducts = computed(() => {
 
 // Pridanie produktu do košíka
 const addToCart = async (product: Product) => {
-  const orderItem = new OrderItem(product, 1);
   cartStatus.value[product.id] = true;
   setTimeout(() => {
-          cartStatus.value[product.id] = false; // Po pár sekundách skryješ nápis
-        }, 2000); // Pridávame s default množstvom 1
+    cartStatus.value[product.id] = false;
+  }, 2000);
+
+  const orderItem = {
+    productId: product.id,
+    quantity: 1,
+  };
+
   try {
     await orderItemService.addOrderItem(orderItem);
+    cartStore.addItem(product.id, 1);
+    await loadCartItems(); // Znova načítať obsah košíka
   } catch (err) {
     console.error('Nepodarilo sa pridať produkt do košíka', err);
   }
 };
+
 
 
 onMounted(async () => {

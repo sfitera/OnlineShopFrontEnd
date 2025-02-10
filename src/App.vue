@@ -1,5 +1,21 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { cartStore } from './stores/cartStore';
+
+const cartItemCount = ref(0);
+
+const updateCartCount = () => {
+  cartItemCount.value = cartStore.getTotalQuantity();
+};
+
+const getImageUrl = (imagePath: string) => {
+  return `http://localhost:8080/${imagePath}`
+}
+
+onMounted(() => {
+  updateCartCount();
+  cartStore.subscribe(updateCartCount);
+});
 </script>
 
 <template>
@@ -7,10 +23,12 @@ import { RouterLink, RouterView } from 'vue-router';
     <!-- Header -->
     <header class="header">
       <nav class="nav">
-        <RouterLink to="/" class="nav-link">Home</RouterLink>
-        <RouterLink to="/about" class="nav-link">About</RouterLink>
-        <RouterLink to="/products/" class="nav-link">Products</RouterLink>
-        <RouterLink to="/cart/" class="nav-link">Cart</RouterLink>
+        <RouterLink to="/">
+          <img src="http://localhost:8080/images/shopLogo3.jpg" alt="obrázok" class="logo-image" />
+        </RouterLink>
+        <RouterLink to="/cart/" class="nav-link">Košík
+          <span v-if="cartItemCount > 0" class="cart-badge">{{ cartItemCount }}</span>
+        </RouterLink>
 
         <!-- Profilový dropdown -->
         <div class="dropdown">
@@ -26,10 +44,11 @@ import { RouterLink, RouterView } from 'vue-router';
     <!-- Obsah stránky -->
     <div class="content-wrapper">
       <aside class="sidebar left-sidebar">
-        <p>Navigácia vľavo</p>
         <ul>
-          <li><RouterLink to="/category/electronics">Elektronika</RouterLink></li>
-          <li><RouterLink to="/category/books">Knihy</RouterLink></li>
+          <li><RouterLink to="/" class="nav-link">Domov</RouterLink></li>
+          <li><RouterLink to="/about" class="nav-link">O stránke</RouterLink></li>
+          <li><RouterLink to="/category/electronics" class="nav-link">Elektronika</RouterLink></li>
+          <li><RouterLink to="/category/books" class="nav-link">Knihy</RouterLink></li>
         </ul>
       </aside>
 
@@ -38,10 +57,9 @@ import { RouterLink, RouterView } from 'vue-router';
       </main>
 
       <aside class="sidebar right-sidebar">
-        <p>Navigácia vpravo</p>
         <ul>
-          <li><RouterLink to="/promo">Promo akcie</RouterLink></li>
-          <li><RouterLink to="/support">Podpora</RouterLink></li>
+          <li><RouterLink to="/promo" class="nav-link">Promo akcie</RouterLink></li>
+          <li><RouterLink to="/support" class="nav-link">Podpora</RouterLink></li>
         </ul>
       </aside>
     </div>
@@ -132,7 +150,7 @@ import { RouterLink, RouterView } from 'vue-router';
 
 .sidebar {
   width: 20%;
-
+  background-color: #343a40;
   padding: 1rem;
 
 }
@@ -153,5 +171,21 @@ import { RouterLink, RouterView } from 'vue-router';
   color: white;
   text-align: center;
   padding: 1rem;
+}
+
+.cart-badge {
+  background-color: red;
+  color: white;
+  font-size: 12px;
+  border-radius: 50%;
+  padding: 4px 6px;
+  margin-left: 5px;
+}
+
+.logo-image {
+  width: 75px;
+  height: 75px;
+  object-fit: cover;
+  border-radius: 5px;
 }
 </style>
