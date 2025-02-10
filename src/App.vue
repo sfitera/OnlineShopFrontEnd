@@ -10,6 +10,7 @@ import { RouterLink, RouterView } from 'vue-router';
         <RouterLink to="/" class="nav-link">Home</RouterLink>
         <RouterLink to="/about" class="nav-link">About</RouterLink>
         <RouterLink to="/products/" class="nav-link">Products</RouterLink>
+        <RouterLink to="/cart/" class="nav-link">Cart</RouterLink>
 
         <!-- Profilový dropdown -->
         <div class="dropdown">
@@ -131,7 +132,7 @@ import { RouterLink, RouterView } from 'vue-router';
 
 .sidebar {
   width: 20%;
-  
+
   padding: 1rem;
 
 }

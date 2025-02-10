@@ -16,8 +16,12 @@
           </RouterLink>
           <p>{{ product.productPrice }} €</p>
           <p v-if="product.productQuantity === 0" class="out-of-stock">Nedostupné</p>
-        </div>
+          <p v-else-if="product.productQuantity > 0">
+            <button v-if="!cartStatus[product.id]" @click="addToCart(product)">Pridať do košíka</button>
+              <p v-else class="text-green-500">Pridané do košíka!</p>
+          </p>
 
+        </div>
     </div>
   </section>
 </template>
@@ -26,10 +30,15 @@
 import { ref, onMounted, computed } from 'vue';
 import { Product } from '@/models/Product';
 import { ProductService } from '@/services/ProductService';
+import { OrderItem } from '@/models/OrderItem';
+import { OrderItemService } from '@/services/OrderItemService';
 
 const products = ref<Product[]>([]);
 const loading = ref<boolean>(true);
 const error = ref<string | null>(null);
+const cartStatus = ref<{ [key: number]: boolean }>({});
+
+const orderItemService = new OrderItemService();
 
 // Funkcia na generovanie URL pre obrázok
 const getProductImageUrl = (imagePath: string) => {
@@ -39,6 +48,21 @@ const getProductImageUrl = (imagePath: string) => {
 const sortedProducts = computed(() => {
   return [...products.value].sort((a, b) => a.productName.localeCompare(b.productName));
 });
+
+// Pridanie produktu do košíka
+const addToCart = async (product: Product) => {
+  const orderItem = new OrderItem(product, 1);
+  cartStatus.value[product.id] = true;
+  setTimeout(() => {
+          cartStatus.value[product.id] = false; // Po pár sekundách skryješ nápis
+        }, 2000); // Pridávame s default množstvom 1
+  try {
+    await orderItemService.addOrderItem(orderItem);
+  } catch (err) {
+    console.error('Nepodarilo sa pridať produkt do košíka', err);
+  }
+};
+
 
 onMounted(async () => {
   const productService = new ProductService();
@@ -91,5 +115,9 @@ ul {
 .out-of-stock {
   color: red;
   font-weight: bold;
+}
+
+.text-green-500 {
+  color: #10b981;
 }
 </style>
