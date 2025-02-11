@@ -23,8 +23,8 @@ import { defineComponent, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ProductService } from '@/services/ProductService'
 import { Product } from '@/models/Product'
-import { OrderItem } from '@/models/OrderItem'
 import { OrderItemService } from '@/services/OrderItemService'
+import { cartStore } from '@/stores/cartStore'
 
 export default defineComponent({
   name: 'ProductDetail',
@@ -56,8 +56,9 @@ export default defineComponent({
       }
 
       try {
-        await orderItemService.addOrderItem(orderItem);
-        cartStore.addItem(product.id, 1);
+        await orderItemService.addOrderItem(orderItem)
+        cartStore.addItem(product.id, 1)
+        cartStore.triggerUpdate()
         alert('Produkt bol pridaný do košíka.')
       } catch (err) {
         console.error('Nepodarilo sa pridať produkt do košíka', err)

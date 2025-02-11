@@ -6,8 +6,7 @@
     <div v-if="loading">Načítavam produkty...</div>
     <div v-else-if="error">{{ error }}</div>
     <div v-else class="product-grid">
-
-        <div v-for="product in sortedProducts" :key="product.id" :class="['product-card', { 'unavailable': product.productQuantity === 0 }]">
+        <div v-for="product in filteredProducts" :key="product.id" :class="['product-card', { 'unavailable': product.productQuantity === 0 }]">
           <RouterLink :to="`/products/${product.id}`">
             <img :src="getProductImageUrl(product.productImage)" alt="Produktový obrázok" class="product-image" />
           </RouterLink>
@@ -18,7 +17,7 @@
           <p v-if="product.productQuantity === 0" class="out-of-stock">Nedostupné</p>
           <p v-else-if="product.productQuantity > 0">
             <button v-if="!cartStatus[product.id]" @click="addToCart(product)">Pridať do košíka</button>
-              <p v-else class="text-green-500">Pridané do košíka!</p>
+            <p v-else class="text-green-500">Pridané do košíka!</p>
           </p>
         </div>
     </div>
@@ -27,9 +26,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { Product } from '@/models/Product';
 import { ProductService } from '@/services/ProductService';
-import { OrderItem } from '@/models/OrderItem';
 import { OrderItemService } from '@/services/OrderItemService';
 import { cartStore } from '@/stores/cartStore';
 
@@ -37,17 +36,34 @@ const products = ref<Product[]>([]);
 const loading = ref<boolean>(true);
 const error = ref<string | null>(null);
 const cartStatus = ref<{ [key: number]: boolean }>({});
-
+const route = useRoute();
 const orderItemService = new OrderItemService();
+
+const filteredProducts = computed(() => {
+  const category = route.query.category as string;
+  const search = route.query.search as string;
+  let filtered = products.value;
+
+  if (category && category !== 'all') {
+    filtered = filtered.filter(product => product.productCategory === category);
+  } else {
+    filtered = [...products.value].sort((a, b) => a.productName.localeCompare(b.productName));
+  }
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filtered = filtered.filter(product =>
+      product.productName.toLowerCase().includes(searchLower) ||
+      (product.productDescription && product.productDescription.toLowerCase().includes(searchLower)) ||
+      (product.productAuthor && product.productAuthor.toLowerCase().includes(searchLower))
+    );
+  }
+  return filtered;
+});
 
 // Funkcia na generovanie URL pre obrázok
 const getProductImageUrl = (imagePath: string) => {
   return `http://localhost:8080/${imagePath}`;
 };
-
-const sortedProducts = computed(() => {
-  return [...products.value].sort((a, b) => a.productName.localeCompare(b.productName));
-});
 
 // Pridanie produktu do košíka
 const addToCart = async (product: Product) => {
@@ -64,13 +80,12 @@ const addToCart = async (product: Product) => {
   try {
     await orderItemService.addOrderItem(orderItem);
     cartStore.addItem(product.id, 1);
+    cartStore.triggerUpdate();
     await loadCartItems(); // Znova načítať obsah košíka
   } catch (err) {
     console.error('Nepodarilo sa pridať produkt do košíka', err);
   }
 };
-
-
 
 onMounted(async () => {
   const productService = new ProductService();

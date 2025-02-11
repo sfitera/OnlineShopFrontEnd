@@ -1,21 +1,37 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { cartStore } from './stores/cartStore';
+import { ref, onMounted, computed, watch } from 'vue'
+import { cartStore } from './stores/cartStore'
+import { useRouter, useRoute } from 'vue-router'
+import { Category } from '@/models/Product'
 
-const cartItemCount = ref(0);
+const router = useRouter()
+const route = useRoute()
+const categoryList = ref(Object.values(Category))
+const cartItemCount = computed(() => cartStore.getTotalQuantity())
+const searchQuery = ref('')
 
-const updateCartCount = () => {
-  cartItemCount.value = cartStore.getTotalQuantity();
-};
-
-const getImageUrl = (imagePath: string) => {
-  return `http://localhost:8080/${imagePath}`
+const formatCategoryName = (category: string) => {
+  return category.replace('_', ' ').toUpperCase()
 }
 
+const updateCartCount = () => {
+  cartItemCount.value = cartStore.getTotalQuantity()
+}
+
+const handleSearch = () => {
+  router.push({ path: '/', query: { ...route.query, search: searchQuery.value } })
+}
+watch(searchQuery, handleSearch)
+
+cartStore.subscribe(() => {
+  console.log('Košík sa zmenil, počet položiek:', cartStore.getTotalQuantity())
+})
+
 onMounted(() => {
-  updateCartCount();
-  cartStore.subscribe(updateCartCount);
-});
+  updateCartCount()
+  cartStore.subscribe(updateCartCount)
+  cartStore.triggerUpdate()
+})
 </script>
 
 <template>
@@ -24,9 +40,18 @@ onMounted(() => {
     <header class="header">
       <nav class="nav">
         <RouterLink to="/">
-          <img src="http://localhost:8080/images/shopLogo3.jpg" alt="obrázok" class="logo-image" />
+          <img src="http://localhost:8080/images/shopLogo.jpg" alt="obrázok" class="logo-image" />
         </RouterLink>
-        <RouterLink to="/cart/" class="nav-link">Košík
+        <div>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Vyhľadajte produkty..."
+            class="search-bar"
+          />
+        </div>
+        <RouterLink to="/cart/" class="nav-link"
+          >Košík
           <span v-if="cartItemCount > 0" class="cart-badge">{{ cartItemCount }}</span>
         </RouterLink>
 
@@ -41,15 +66,25 @@ onMounted(() => {
       </nav>
     </header>
 
-    <!-- Obsah stránky -->
     <div class="content-wrapper">
       <aside class="sidebar left-sidebar">
-        <ul>
-          <li><RouterLink to="/" class="nav-link">Domov</RouterLink></li>
-          <li><RouterLink to="/about" class="nav-link">O stránke</RouterLink></li>
-          <li><RouterLink to="/category/electronics" class="nav-link">Elektronika</RouterLink></li>
-          <li><RouterLink to="/category/books" class="nav-link">Knihy</RouterLink></li>
-        </ul>
+        <router-link to="/" class="sidebar-btn">Domov</router-link>
+        <router-link to="/about" class="sidebar-btn">O stránke</router-link>
+        <h3>Kategórie</h3>
+        <button
+          @click="$router.push({ path: '/', query: { category: 'all' } })"
+          class="category-btn"
+        >
+          Všetky produkty
+        </button>
+        <button
+          v-for="category in categoryList"
+          :key="category"
+          @click="$router.push({ path: '/', query: { category } })"
+          class="category-btn"
+        >
+          {{ formatCategoryName(category) }}
+        </button>
       </aside>
 
       <main class="main-content">
@@ -58,8 +93,8 @@ onMounted(() => {
 
       <aside class="sidebar right-sidebar">
         <ul>
-          <li><RouterLink to="/promo" class="nav-link">Promo akcie</RouterLink></li>
-          <li><RouterLink to="/support" class="nav-link">Podpora</RouterLink></li>
+          <li><RouterLink to="/promo" class="sidebar-btn">Promo akcie</RouterLink></li>
+          <li><RouterLink to="/support" class="sidebar-btn">Podpora</RouterLink></li>
         </ul>
       </aside>
     </div>
@@ -80,21 +115,35 @@ onMounted(() => {
 }
 
 .header {
-  background-color: #343a40;
+  background: linear-gradient(
+    45deg,
+    #1a1927,
+    #1a1927,
+    #fed40a,
+    #87d72f,
+    #00bde7,
+    #cd0d63,
+    #e81111,
+    #fa8112
+  );
   color: white;
   padding: 1rem;
   text-align: center;
 }
 
 .nav {
+  grid-column: 1 / 4;
+
   display: flex;
-  justify-content: center;
-  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  color: white;
 }
 
 .nav-link {
   text-decoration: none;
-  color: white;
+  color: black;
   padding: 0.5rem 1rem;
 }
 
@@ -152,11 +201,16 @@ onMounted(() => {
   width: 20%;
   background-color: #343a40;
   padding: 1rem;
-
 }
 
 .left-sidebar {
-  order: -1;
+  background: white;
+  padding: 1.5rem;
+}
+
+.right-sidebar {
+  background: white;
+  padding: 1.5rem;
 }
 
 .main-content {
@@ -167,7 +221,17 @@ onMounted(() => {
 
 /* Footer */
 .footer {
-  background-color: #343a40;
+  background: linear-gradient(
+    45deg,
+    #1a1927,
+    #1a1927,
+    #fed40a,
+    #87d72f,
+    #00bde7,
+    #cd0d63,
+    #e81111,
+    #fa8112
+  );
   color: white;
   text-align: center;
   padding: 1rem;
@@ -187,5 +251,35 @@ onMounted(() => {
   height: 75px;
   object-fit: cover;
   border-radius: 5px;
+}
+.sidebar-btn,
+.category-btn {
+  display: block;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background: #00bde7;
+  color: #cd0d63;
+  text-align: left;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 8px;
+}
+
+.sidebar-btn:hover,
+.category-btn:hover {
+  background: #87d72f;
+}
+
+.category-section {
+  margin-top: 2rem;
+}
+
+.search-bar {
+  padding: 0.5rem;
+  width: 200px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 }
 </style>

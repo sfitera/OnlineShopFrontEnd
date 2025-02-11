@@ -44,15 +44,15 @@
       </div>
 
       <!-- Tlačidlo na zobrazenie údajov checkoutu -->
-      <button @click="showCheckoutDetails = true">Pokračovať</button>
+      <button @click="continueToCheckout" :disabled="orderItems.length === 0">Pokračovať</button>
 
       <!-- Sekcia pre údaje používateľa alebo prihlásenie -->
-      <div v-if="showCheckoutDetails" class="checkout-details">
+      <div v-if="showCheckoutDetails && orderItems.length > 0" class="checkout-details">
         <div v-if="!isLoggedIn">
           <p>
-            Nie ste prihlásený. Pre pokračovanie prosím
-            <router-link to="/login">prihláste sa</router-link> alebo
-            <router-link to="/register">registrovať sa.</router-link>
+            Nie ste prihlásený. Pre pokračovanie sa prosím
+            <router-link to="/login">prihláste</router-link> alebo
+            <router-link to="/register">registrujte.</router-link>
           </p>
         </div>
 
@@ -76,25 +76,22 @@ import { OrderStatus } from '@/models/Order'
 import { OrderItem } from '@/models/OrderItem'
 import { OrderItemService } from '@/services/OrderItemService'
 import { User } from '@/models/User'
+import { cartStore } from '@/stores/cartStore'
 
 // Košík
 const orderItems = ref<OrderItem[]>([])
 const loading = ref<boolean>(true)
 const error = ref<string | null>(null)
 const orderItemService = new OrderItemService()
-
 // Zobrazenie sekcie s údajmi
 const showCheckoutDetails = ref<boolean>(false)
-
 // Mock používateľa (pre testovanie)
 const user = ref<User | null>(null)
 const isLoggedIn = ref<boolean>(false)
-
 // Celková cena košíka (computed property)
 const totalCartPrice = computed(() =>
   orderItems.value.reduce((sum, item) => sum + item.itemPrice, 0),
 )
-
 // Funkcia na generovanie URL pre obrázok
 const getProductImageUrl = (imagePath: string) => {
   return `http://localhost:8080/${imagePath}`
@@ -102,6 +99,9 @@ const getProductImageUrl = (imagePath: string) => {
 
 // Načítanie položiek košíka pri načítaní komponentu
 onMounted(async () => {
+  console.log('Košík na zaciatku:', orderItems.value)
+console.log('Košík v localStorage:', localStorage.getItem('cartItems'))
+console.log('Stav prihlásenia:', isLoggedIn.value)
   try {
     orderItems.value = await orderItemService.getOrderItems()
   } catch {
@@ -140,9 +140,18 @@ const removeItem = async (id?: number) => {
     try {
       await orderItemService.deleteOrderItem(id)
       orderItems.value = orderItems.value.filter((item) => item.id !== id)
+      if (orderItems.value.length === 0) {
+        showCheckoutDetails.value = false
+      }
     } catch (err) {
       console.error('Chyba pri odstraňovaní položky', err)
     }
+  }
+}
+
+const continueToCheckout = () => {
+  if (orderItems.value.length > 0) {
+    showCheckoutDetails.value = true
   }
 }
 
@@ -157,6 +166,11 @@ const getNumberOfItems = async () => {
 
 // Metóda na vytvorenie objednávky
 const createOrder = async () => {
+  if (cartStore.getTotalQuantity() === 0) {
+    alert('Košík je prázdny. Nie je možné vytvoriť objednávku.')
+    return
+  }
+
   if (user.value) {
     const newOrder = new Order(OrderStatus.CREATED)
     newOrder.orderItems = orderItems.value
@@ -165,6 +179,12 @@ const createOrder = async () => {
       `Objednávka bola vytvorená pre ${user.value.userName} s celkovou cenou ${newOrder.totalPrice.toFixed(2)} €.`,
     )
   }
+  orderItems.value = []   // Vyprázdni položky košíka
+      cartStore.clearCart()   // Vyprázdni store
+      localStorage.removeItem('cartItems')
+      console.log('Košík po objednávke:', orderItems.value)
+console.log('Košík v localStorage:', localStorage.getItem('cartItems'))
+console.log('Stav prihlásenia:', isLoggedIn.value)
 }
 </script>
 
@@ -209,5 +229,10 @@ button {
   height: 75px;
   object-fit: cover;
   border-radius: 5px;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 </style>
