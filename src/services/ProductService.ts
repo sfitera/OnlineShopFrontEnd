@@ -1,7 +1,7 @@
-import axios from 'axios';
-import { Product } from '../models/Product';
+import axios from 'axios'
+import { Product } from '../models/Product'
 
-const productUrl = 'http://localhost:8080/api/products/';
+const productUrl = 'http://localhost:8080/api/products/'
 
 export class ProductService {
   async getProducts(): Promise<Product[]> {
@@ -10,8 +10,8 @@ export class ProductService {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
       },
-    });
-    return response.data;
+    })
+    return response.data
   }
 
   async getProductById(id: number): Promise<Product> {
@@ -19,7 +19,7 @@ export class ProductService {
       headers: {
         'Content-Type': 'application/json',
       },
-    });
-    return response.data;
+    })
+    return response.data
   }
 }
