@@ -7,7 +7,7 @@ export enum UserRole {
 export class User {
   id?: number
   userName: string
-  userPassrord: string
+  userPassword: string
   userAddress: string
   userEmail: string
   userRole: UserRole
@@ -20,7 +20,7 @@ export class User {
     userRole: UserRole,
   ) {
     this.userName = userName
-    this.userPassrord = userPassword
+    this.userPassword = userPassword
     this.userAddress = userAddress
     this.userEmail = userEmail
     this.userRole = userRole

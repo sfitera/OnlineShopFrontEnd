@@ -75,6 +75,7 @@ import { Order } from '@/models/Order'
 import { OrderStatus } from '@/models/Order'
 import { OrderItem } from '@/models/OrderItem'
 import { OrderItemService } from '@/services/OrderItemService'
+import { ProductService } from '@/services/ProductService'
 import { User } from '@/models/User'
 import { cartStore } from '@/stores/cartStore'
 
@@ -83,11 +84,14 @@ const orderItems = ref<OrderItem[]>([])
 const loading = ref<boolean>(true)
 const error = ref<string | null>(null)
 const orderItemService = new OrderItemService()
+const productService = new ProductService();
+
 // Zobrazenie sekcie s údajmi
 const showCheckoutDetails = ref<boolean>(false)
 // Mock používateľa (pre testovanie)
 const user = ref<User | null>(null)
 const isLoggedIn = ref<boolean>(false)
+
 // Celková cena košíka (computed property)
 const totalCartPrice = computed(() =>
   orderItems.value.reduce((sum, item) => sum + item.itemPrice, 0),
@@ -99,9 +103,6 @@ const getProductImageUrl = (imagePath: string) => {
 
 // Načítanie položiek košíka pri načítaní komponentu
 onMounted(async () => {
-  console.log('Košík na zaciatku:', orderItems.value)
-console.log('Košík v localStorage:', localStorage.getItem('cartItems'))
-console.log('Stav prihlásenia:', isLoggedIn.value)
   try {
     orderItems.value = await orderItemService.getOrderItems()
   } catch {
@@ -117,18 +118,38 @@ console.log('Stav prihlásenia:', isLoggedIn.value)
 
 // Zvýšenie množstva položky
 const increaseQuantity = async (item: OrderItem) => {
-  item.quantity++
-  item.itemPrice = item.quantity * (item.product?.productPrice || 0)
-  await orderItemService.updateOrderItem(item)
-  return getNumberOfItems()
-}
+  if (!item.product || item.quantity >= item.product.productQuantity+1) {
+    alert('Nie je možné pridať viac kusov, než je dostupné.');
+    return;
+  }
+
+  item.quantity++;
+  item.itemPrice = item.quantity * (item.product.productPrice || 0);
+
+  try {
+    await orderItemService.updateOrderItem(item);
+    await productService.updateProductQuantity(item.product.id, item.product.productQuantity - 1);
+    item.product.productQuantity--;
+    cartStore.triggerUpdate();
+  } catch (err) {
+    console.error('Chyba pri aktualizácii množstva produktu:', err);
+  }
+};
 
 // Zníženie množstva položky
 const decreaseQuantity = async (item: OrderItem) => {
   if (item.quantity > 1) {
     item.quantity--
     item.itemPrice = item.quantity * (item.product?.productPrice || 0)
-    await orderItemService.updateOrderItem(item)
+
+    try {
+      await orderItemService.updateOrderItem(item);
+      await productService.updateProductQuantity(item.product.id, item.product.productQuantity + 1);
+      item.product.productQuantity++;
+      cartStore.triggerUpdate();
+    } catch (err) {
+      console.error('Chyba pri aktualizácii množstva produktu:', err);
+    }
   } else {
     await removeItem(item.id)
   }
@@ -138,13 +159,16 @@ const decreaseQuantity = async (item: OrderItem) => {
 const removeItem = async (id?: number) => {
   if (id !== undefined) {
     try {
-      await orderItemService.deleteOrderItem(id)
-      orderItems.value = orderItems.value.filter((item) => item.id !== id)
-      if (orderItems.value.length === 0) {
-        showCheckoutDetails.value = false
+      const item = orderItems.value.find(i => i.id === id);
+      if (item?.product) {
+        await productService.updateProductQuantity(item.product.id, item.product.productQuantity + item.quantity);
       }
+
+      await orderItemService.deleteOrderItem(id);
+      orderItems.value = orderItems.value.filter((item) => item.id !== id);
+      cartStore.triggerUpdate();
     } catch (err) {
-      console.error('Chyba pri odstraňovaní položky', err)
+      console.error('Chyba pri odstraňovaní položky', err);
     }
   }
 }
