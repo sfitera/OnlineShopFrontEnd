@@ -52,4 +52,12 @@ export class OrderItemService {
     })
     return response.data
   }
+
+  async clearCart(userId: number): Promise<void> {
+    await axios.delete(`${orderItemUrl}clear-cart/${userId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+  }
 }
