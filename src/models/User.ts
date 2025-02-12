@@ -6,20 +6,20 @@ export enum UserRole {
 
 export class User {
   id?: number
-  userName: string
+  username: string
   userPassword: string
   userAddress: string
   userEmail: string
   userRole: UserRole
 
   constructor(
-    userName: string,
+    username: string,
     userPassword: string,
     userAddress: string,
     userEmail: string,
     userRole: UserRole,
   ) {
-    this.userName = userName
+    this.username = username
     this.userPassword = userPassword
     this.userAddress = userAddress
     this.userEmail = userEmail

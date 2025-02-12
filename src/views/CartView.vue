@@ -48,7 +48,7 @@
 
       <!-- Sekcia pre údaje používateľa alebo prihlásenie -->
       <div v-if="showCheckoutDetails && orderItems.length > 0" class="checkout-details">
-        <div v-if="!isLoggedIn">
+        <div v-if="!userStore.isLoggedIn">
           <p>
             Nie ste prihlásený. Pre pokračovanie sa prosím
             <router-link to="/login">prihláste</router-link> alebo
@@ -58,9 +58,9 @@
 
         <div v-else>
           <h2>Vaše údaje</h2>
-          <p><strong>Meno:</strong> {{ user?.userName }}</p>
-          <p><strong>Email:</strong> {{ user?.userEmail }}</p>
-          <p><strong>Adresa:</strong> {{ user?.userAddress }}</p>
+          <p><strong>Meno:</strong> {{ userStore.user?.username }}</p>
+          <p><strong>Email:</strong> {{ userStore.user?.userEmail }}</p>
+          <p><strong>Adresa:</strong> {{ userStore.user?.userAddress }}</p>
 
           <button @click="createOrder()">Vytvoriť objednávku</button>
         </div>
@@ -78,19 +78,20 @@ import { OrderItemService } from '@/services/OrderItemService'
 import { ProductService } from '@/services/ProductService'
 import { User } from '@/models/User'
 import { cartStore } from '@/stores/cartStore'
+import { OrderService } from '@/services/OrderService'
+import { useUserStore } from '@/stores/userStore'
 
 // Košík
 const orderItems = ref<OrderItem[]>([])
 const loading = ref<boolean>(true)
 const error = ref<string | null>(null)
 const orderItemService = new OrderItemService()
-const productService = new ProductService();
+const productService = new ProductService()
+const orderService = new OrderService()
 
 // Zobrazenie sekcie s údajmi
 const showCheckoutDetails = ref<boolean>(false)
-// Mock používateľa (pre testovanie)
-const user = ref<User | null>(null)
-const isLoggedIn = ref<boolean>(false)
+const userStore = useUserStore()
 
 // Celková cena košíka (computed property)
 const totalCartPrice = computed(() =>
@@ -109,32 +110,28 @@ onMounted(async () => {
     error.value = 'Nepodarilo sa načítať položky košíka.'
   } finally {
     loading.value = false
-
-    // Mock prihlásenia (toto nahradiť reálnou autentifikáciou)
-    user.value = new User('Test User', 'pass123', 'Test Street 123', 'test@test.com', 'USER')
-    isLoggedIn.value = true
   }
 })
 
 // Zvýšenie množstva položky
 const increaseQuantity = async (item: OrderItem) => {
-  if (!item.product || item.quantity >= item.product.productQuantity+1) {
-    alert('Nie je možné pridať viac kusov, než je dostupné.');
-    return;
+  if (!item.product || item.quantity >= item.product.productQuantity + 1) {
+    alert('Nie je možné pridať viac kusov, než je dostupné.')
+    return
   }
 
-  item.quantity++;
-  item.itemPrice = item.quantity * (item.product.productPrice || 0);
+  item.quantity++
+  item.itemPrice = item.quantity * (item.product.productPrice || 0)
 
   try {
-    await orderItemService.updateOrderItem(item);
-    await productService.updateProductQuantity(item.product.id, item.product.productQuantity - 1);
-    item.product.productQuantity--;
-    cartStore.triggerUpdate();
+    await orderItemService.updateOrderItem(item)
+    await productService.updateProductQuantity(item.product.id, item.product.productQuantity - 1)
+    item.product.productQuantity--
+    cartStore.triggerUpdate()
   } catch (err) {
-    console.error('Chyba pri aktualizácii množstva produktu:', err);
+    console.error('Chyba pri aktualizácii množstva produktu:', err)
   }
-};
+}
 
 // Zníženie množstva položky
 const decreaseQuantity = async (item: OrderItem) => {
@@ -143,12 +140,12 @@ const decreaseQuantity = async (item: OrderItem) => {
     item.itemPrice = item.quantity * (item.product?.productPrice || 0)
 
     try {
-      await orderItemService.updateOrderItem(item);
-      await productService.updateProductQuantity(item.product.id, item.product.productQuantity + 1);
-      item.product.productQuantity++;
-      cartStore.triggerUpdate();
+      await orderItemService.updateOrderItem(item)
+      await productService.updateProductQuantity(item.product.id, item.product.productQuantity + 1)
+      item.product.productQuantity++
+      cartStore.triggerUpdate()
     } catch (err) {
-      console.error('Chyba pri aktualizácii množstva produktu:', err);
+      console.error('Chyba pri aktualizácii množstva produktu:', err)
     }
   } else {
     await removeItem(item.id)
@@ -159,16 +156,19 @@ const decreaseQuantity = async (item: OrderItem) => {
 const removeItem = async (id?: number) => {
   if (id !== undefined) {
     try {
-      const item = orderItems.value.find(i => i.id === id);
+      const item = orderItems.value.find((i) => i.id === id)
       if (item?.product) {
-        await productService.updateProductQuantity(item.product.id, item.product.productQuantity + item.quantity);
+        await productService.updateProductQuantity(
+          item.product.id,
+          item.product.productQuantity + item.quantity,
+        )
       }
 
-      await orderItemService.deleteOrderItem(id);
-      orderItems.value = orderItems.value.filter((item) => item.id !== id);
-      cartStore.triggerUpdate();
+      await orderItemService.deleteOrderItem(id)
+      orderItems.value = orderItems.value.filter((item) => item.id !== id)
+      cartStore.triggerUpdate()
     } catch (err) {
-      console.error('Chyba pri odstraňovaní položky', err);
+      console.error('Chyba pri odstraňovaní položky', err)
     }
   }
 }
@@ -190,25 +190,33 @@ const getNumberOfItems = async () => {
 
 // Metóda na vytvorenie objednávky
 const createOrder = async () => {
-  if (cartStore.getTotalQuantity() === 0) {
-    alert('Košík je prázdny. Nie je možné vytvoriť objednávku.')
+  if (!userStore.user || !userStore.user.id) {
+    alert('Chyba: Musíte byť prihlásený na vytvorenie objednávky!')
     return
   }
 
-  if (user.value) {
-    const newOrder = new Order(OrderStatus.CREATED)
-    newOrder.orderItems = orderItems.value
-    newOrder.recalculateTotalPrice()
-    alert(
-      `Objednávka bola vytvorená pre ${user.value.userName} s celkovou cenou ${newOrder.totalPrice.toFixed(2)} €.`,
-    )
+  const newOrder = {
+    userId: userStore.user.id,
+    orderItems: orderItems.value.map((item) => ({
+      productId: item.product.id,
+      quantity: item.quantity,
+      itemPrice: item.itemPrice,
+    })),
+    orderStatus: 'CREATED',
+    orderDate: new Date().toISOString().split('T')[0],
   }
-  orderItems.value = []   // Vyprázdni položky košíka
-      cartStore.clearCart()   // Vyprázdni store
-      localStorage.removeItem('cartItems')
-      console.log('Košík po objednávke:', orderItems.value)
-console.log('Košík v localStorage:', localStorage.getItem('cartItems'))
-console.log('Stav prihlásenia:', isLoggedIn.value)
+
+  console.log('Odosielam objednávku:', newOrder)
+
+  try {
+    const response = await orderService.createOrder(newOrder)
+    alert(`Objednávka bola úspešne vytvorená! ID: ${response.id}`)
+    orderItems.value = []
+    //cartStore.clearCart();
+  } catch (error) {
+    console.error('Chyba pri vytváraní objednávky:', error)
+    alert('Nepodarilo sa vytvoriť objednávku.')
+  }
 }
 </script>
 

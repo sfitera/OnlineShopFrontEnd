@@ -18,15 +18,8 @@
           >Košík
           <span v-if="cartItemCount > 0" class="cart-badge">{{ cartItemCount }}</span>
         </RouterLink>
-
-        <!-- Profilový dropdown -->
-        <div class="dropdown">
-          <button class="dropbtn">Profil</button>
-          <div class="dropdown-content">
-            <RouterLink to="/login" class="dropdown-item">Prihlásenie</RouterLink>
-            <RouterLink to="/orders" class="dropdown-item">Moje objednávky</RouterLink>
-          </div>
-        </div>
+        <RouterLink to="/orders" class="nav-link">Moje objednávky</RouterLink>
+        <RouterLink to="/login" class="nav-link">Prihlásenie</RouterLink>
       </nav>
     </header>
 
@@ -56,7 +49,7 @@
       </main>
 
       <aside class="sidebar right-sidebar">
-        <div v-if="!isLoggedIn" class="auth-form">
+        <div v-if="!userStore.isLoggedIn" class="auth-form">
           <h3>Prihlásenie</h3>
           <input v-model="loginData.email" type="email" placeholder="Email" />
           <input v-model="loginData.password" type="password" placeholder="Heslo" />
@@ -73,11 +66,13 @@
           </div>
         </div>
         <div v-else>
-          <h3>Vitaj, {{ user?.userName }}</h3>
-          <p>Email: {{ user?.userEmail }}</p>
+          <h3>Vitaj, {{ userStore.user?.username }}</h3>
+          <p>Email: {{ userStore.user?.userEmail }}</p>
           <RouterLink to="/profile" class="nav-link">Profil</RouterLink>
           <RouterLink to="/cart/" class="nav-link">Košík</RouterLink>
-          <button @click="logout">Odhlásiť</button>
+          <RouterLink to="/">
+            <button @click="logout">Odhlásiť</button>
+          </RouterLink>
         </div>
       </aside>
     </div>
@@ -91,23 +86,28 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { cartStore } from './stores/cartStore'
 import { useRouter, useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
+import { cartStore } from './stores/cartStore'
 import { Category } from '@/models/Product'
-import { UserService } from '@/services/UserService';
-import { User, UserRole } from '@/models/User';
+import { UserService } from '@/services/UserService'
+import { User, UserRole } from '@/models/User'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
+const userService = new UserService()
 const categoryList = ref(Object.values(Category))
 const cartItemCount = computed(() => cartStore.getTotalQuantity())
 const searchQuery = ref('')
-const isLoggedIn = ref(false);
-const user = ref<User | null>(null);
-const userService = new UserService();
-const showRegister = ref(false);
-const loginData = ref({ email: '', password: '' });
-const registerData = ref({ userName: '', email: '', password: '', address: '' });
+const showRegister = ref(false)
+const loginData = ref({ email: '', password: '' })
+const registerData = ref({ userName: '', email: '', password: '', address: '' })
+
+onMounted(() => {
+  userStore.loadUserFromStorage()
+  cartStore.triggerUpdate()
+})
 
 const formatCategoryName = (category: string) => {
   return category.replace('_', ' ').toUpperCase()
@@ -126,32 +126,19 @@ cartStore.subscribe(() => {
   console.log('Košík sa zmenil, počet položiek:', cartStore.getTotalQuantity())
 })
 
-onMounted(() => {
-  const storedUser = localStorage.getItem('user');
-  if (storedUser) {
-    user.value = JSON.parse(storedUser);
-    isLoggedIn.value = true;
-  }
-  cartStore.triggerUpdate();
-});
-
 const login = async () => {
   try {
-    const response = await userService.loginUser(loginData.value.email, loginData.value.password);
-
+    const response = await userService.loginUser(loginData.value.email, loginData.value.password)
     if (response) {
-      console.log("Úspešne prihlásený:", response);
-      isLoggedIn.value = true;
-      user.value = response;
-      localStorage.setItem("user", JSON.stringify(response));
+      userStore.setUser(response)
     } else {
-      alert("Nesprávne prihlasovacie údaje.");
+      alert('Nesprávne prihlasovacie údaje.')
     }
   } catch (error) {
-    console.error("Chyba pri prihlasovaní:", error);
-    alert("Chyba pri prihlásení: " + error.response?.data || error.message);
+    console.error('Chyba pri prihlasovaní:', error)
+    alert('Chyba pri prihlásení: ' + error.response?.data || error.message)
   }
-};
+}
 
 const register = async () => {
   try {
@@ -160,27 +147,24 @@ const register = async () => {
       registerData.value.password,
       registerData.value.address,
       registerData.value.email,
-      UserRole.USER
-    );
-    await userService.addUser(newUser);
-    alert('Registrácia úspešná! Prihláste sa.');
-    showRegister.value = false;
+      UserRole.USER,
+    )
+    await userService.addUser(newUser)
+    alert('Registrácia úspešná! Prihláste sa.')
+    showRegister.value = false
   } catch (error) {
-    console.error('Chyba pri registrácii:', error);
+    console.error('Chyba pri registrácii:', error)
   }
-};
+}
 
 const logout = () => {
-  isLoggedIn.value = false;
-  user.value = null;
-  localStorage.removeItem('user');
-};
+  userStore.clearUser()
+  router.push('/')
+}
 
 const toggleRegister = () => {
-  showRegister.value = !showRegister.value;
-};
-
-
+  showRegister.value = !showRegister.value
+}
 </script>
 
 <style scoped>

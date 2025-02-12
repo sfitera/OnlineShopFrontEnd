@@ -4,8 +4,8 @@ import { Order } from '../models/Order'
 const orderUrl = 'http://localhost:8080/api/orders/'
 
 export class OrderService {
-  async addOrder(order: Order): Promise<Order> {
-    const response = await axios.post(`${orderUrl}create/`, order, {
+  async createOrder(order: Order): Promise<Order> {
+    const response = await axios.post(`${orderUrl}create`, order, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -58,5 +58,4 @@ export class OrderService {
     })
     return response.data
   }
-
 }
