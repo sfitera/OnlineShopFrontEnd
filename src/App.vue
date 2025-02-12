@@ -1,39 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
-import { cartStore } from './stores/cartStore'
-import { useRouter, useRoute } from 'vue-router'
-import { Category } from '@/models/Product'
-
-const router = useRouter()
-const route = useRoute()
-const categoryList = ref(Object.values(Category))
-const cartItemCount = computed(() => cartStore.getTotalQuantity())
-const searchQuery = ref('')
-
-const formatCategoryName = (category: string) => {
-  return category.replace('_', ' ').toUpperCase()
-}
-
-const updateCartCount = () => {
-  cartItemCount.value = cartStore.getTotalQuantity()
-}
-
-const handleSearch = () => {
-  router.push({ path: '/', query: { ...route.query, search: searchQuery.value } })
-}
-watch(searchQuery, handleSearch)
-
-cartStore.subscribe(() => {
-  console.log('Košík sa zmenil, počet položiek:', cartStore.getTotalQuantity())
-})
-
-onMounted(() => {
-  updateCartCount()
-  cartStore.subscribe(updateCartCount)
-  cartStore.triggerUpdate()
-})
-</script>
-
 <template>
   <div class="page-container">
     <!-- Header -->
@@ -92,10 +56,29 @@ onMounted(() => {
       </main>
 
       <aside class="sidebar right-sidebar">
-        <ul>
-          <li><RouterLink to="/promo" class="sidebar-btn">Promo akcie</RouterLink></li>
-          <li><RouterLink to="/support" class="sidebar-btn">Podpora</RouterLink></li>
-        </ul>
+        <div v-if="!isLoggedIn" class="auth-form">
+          <h3>Prihlásenie</h3>
+          <input v-model="loginData.email" type="email" placeholder="Email" />
+          <input v-model="loginData.password" type="password" placeholder="Heslo" />
+          <button @click="login">Prihlásiť</button>
+          <p>Nemáte účet? <span @click="toggleRegister" class="link">Registrovať</span></p>
+
+          <div v-if="showRegister">
+            <h3>Registrácia</h3>
+            <input v-model="registerData.userName" type="text" placeholder="Meno" />
+            <input v-model="registerData.email" type="email" placeholder="Email" />
+            <input v-model="registerData.password" type="password" placeholder="Heslo" />
+            <input v-model="registerData.address" type="text" placeholder="Adresa" />
+            <button @click="register">Registrovať</button>
+          </div>
+        </div>
+        <div v-else>
+          <h3>Vitaj, {{ user?.userName }}</h3>
+          <p>Email: {{ user?.userEmail }}</p>
+          <RouterLink to="/profile" class="nav-link">Profil</RouterLink>
+          <RouterLink to="/cart/" class="nav-link">Košík</RouterLink>
+          <button @click="logout">Odhlásiť</button>
+        </div>
       </aside>
     </div>
 
@@ -105,6 +88,100 @@ onMounted(() => {
     </footer>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed, watch } from 'vue'
+import { cartStore } from './stores/cartStore'
+import { useRouter, useRoute } from 'vue-router'
+import { Category } from '@/models/Product'
+import { UserService } from '@/services/UserService';
+import { User, UserRole } from '@/models/User';
+
+const router = useRouter()
+const route = useRoute()
+const categoryList = ref(Object.values(Category))
+const cartItemCount = computed(() => cartStore.getTotalQuantity())
+const searchQuery = ref('')
+const isLoggedIn = ref(false);
+const user = ref<User | null>(null);
+const userService = new UserService();
+const showRegister = ref(false);
+const loginData = ref({ email: '', password: '' });
+const registerData = ref({ userName: '', email: '', password: '', address: '' });
+
+const formatCategoryName = (category: string) => {
+  return category.replace('_', ' ').toUpperCase()
+}
+
+const updateCartCount = () => {
+  cartItemCount.value = cartStore.getTotalQuantity()
+}
+
+const handleSearch = () => {
+  router.push({ path: '/', query: { ...route.query, search: searchQuery.value } })
+}
+watch(searchQuery, handleSearch)
+
+cartStore.subscribe(() => {
+  console.log('Košík sa zmenil, počet položiek:', cartStore.getTotalQuantity())
+})
+
+onMounted(() => {
+  const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    user.value = JSON.parse(storedUser);
+    isLoggedIn.value = true;
+  }
+  cartStore.triggerUpdate();
+});
+
+const login = async () => {
+  try {
+    const response = await userService.loginUser(loginData.value.email, loginData.value.password);
+
+    if (response) {
+      console.log("Úspešne prihlásený:", response);
+      isLoggedIn.value = true;
+      user.value = response;
+      localStorage.setItem("user", JSON.stringify(response));
+    } else {
+      alert("Nesprávne prihlasovacie údaje.");
+    }
+  } catch (error) {
+    console.error("Chyba pri prihlasovaní:", error);
+    alert("Chyba pri prihlásení: " + error.response?.data || error.message);
+  }
+};
+
+const register = async () => {
+  try {
+    const newUser = new User(
+      registerData.value.userName,
+      registerData.value.password,
+      registerData.value.address,
+      registerData.value.email,
+      UserRole.USER
+    );
+    await userService.addUser(newUser);
+    alert('Registrácia úspešná! Prihláste sa.');
+    showRegister.value = false;
+  } catch (error) {
+    console.error('Chyba pri registrácii:', error);
+  }
+};
+
+const logout = () => {
+  isLoggedIn.value = false;
+  user.value = null;
+  localStorage.removeItem('user');
+};
+
+const toggleRegister = () => {
+  showRegister.value = !showRegister.value;
+};
+
+
+</script>
 
 <style scoped>
 /* Všeobecné nastavenie layoutu */
@@ -281,5 +358,36 @@ onMounted(() => {
   width: 200px;
   border-radius: 4px;
   border: 1px solid #ccc;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-form input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.auth-form button {
+  background-color: #00bde7;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.link {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link:hover {
+  color: #0056b3;
 }
 </style>

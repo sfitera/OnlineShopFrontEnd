@@ -15,10 +15,17 @@
           </RouterLink>
           <p>{{ product.productPrice.toFixed(2) }} €</p>
           <p v-if="product.productQuantity === 0" class="out-of-stock">Nedostupné</p>
-          <p v-else-if="product.productQuantity > 0">
-            <button v-if="!cartStatus[product.id]" @click="addToCart(product)">Pridať do košíka</button>
+          <p v-else>
+            <button
+              v-if="!cartStatus[product.id]"
+              :disabled="product.productQuantity === 0"
+              @click="addToCart(product)"
+              class="add-to-cart-btn">
+              Pridať do košíka
+            </button>
             <p v-else class="text-green-500">Pridané do košíka!</p>
           </p>
+          <p class="quantity-info">Dostupné množstvo: {{ product.productQuantity }}</p>
         </div>
     </div>
   </section>
@@ -29,6 +36,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { Product } from '@/models/Product';
 import { ProductService } from '@/services/ProductService';
+import { OrderItem } from '@/models/OrderItem';
 import { OrderItemService } from '@/services/OrderItemService';
 import { cartStore } from '@/stores/cartStore';
 
@@ -38,6 +46,7 @@ const error = ref<string | null>(null);
 const cartStatus = ref<{ [key: number]: boolean }>({});
 const route = useRoute();
 const orderItemService = new OrderItemService();
+const productService = new ProductService();
 
 const filteredProducts = computed(() => {
   const category = route.query.category as string;
@@ -57,16 +66,20 @@ const filteredProducts = computed(() => {
       (product.productAuthor && product.productAuthor.toLowerCase().includes(searchLower))
     );
   }
+
   return filtered;
 });
 
-// Funkcia na generovanie URL pre obrázok
 const getProductImageUrl = (imagePath: string) => {
   return `http://localhost:8080/${imagePath}`;
 };
 
-// Pridanie produktu do košíka
 const addToCart = async (product: Product) => {
+  if (product.productQuantity <= 0) {
+    console.error('Produkt nie je dostupný na pridanie do košíka.');
+    return;
+  }
+
   cartStatus.value[product.id] = true;
   setTimeout(() => {
     cartStatus.value[product.id] = false;
@@ -81,14 +94,17 @@ const addToCart = async (product: Product) => {
     await orderItemService.addOrderItem(orderItem);
     cartStore.addItem(product.id, 1);
     cartStore.triggerUpdate();
-    await loadCartItems(); // Znova načítať obsah košíka
+
+    // Aktualizácia množstva produktu v databáze
+    const updatedQuantity = product.productQuantity - 1;
+    await productService.updateProductQuantity(product.id, updatedQuantity);
+    product.productQuantity = updatedQuantity;
   } catch (err) {
     console.error('Nepodarilo sa pridať produkt do košíka', err);
   }
 };
 
 onMounted(async () => {
-  const productService = new ProductService();
   try {
     products.value = await productService.getProducts();
   } catch {
@@ -107,8 +123,8 @@ onMounted(async () => {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr); /* 4 produkty vedľa seba */
-  gap: 1rem; /* medzera medzi produktmi */
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
   padding: 1rem;
 }
 
@@ -124,9 +140,9 @@ ul {
 }
 
 .product-image {
-  max-width: 100%; /* Obrázok sa prispôsobí šírke kontajnera */
+  max-width: 100%;
   height: auto;
-  margin-bottom: 1rem; /* Medzera medzi obrázkom a textom */
+  margin-bottom: 1rem;
 }
 
 .unavailable {
@@ -142,5 +158,24 @@ ul {
 
 .text-green-500 {
   color: #10b981;
+}
+
+.add-to-cart-btn {
+  background-color: #00bde7;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.add-to-cart-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.quantity-info {
+  font-size: 0.9rem;
+  color: #666;
 }
 </style>
