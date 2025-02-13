@@ -10,6 +10,7 @@ import ProfileView from '@/views/ProfileView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import LoginView from '@/views/LoginView.vue'
 import OrderView from '@/views/OrderView.vue'
+import AdminView from '@/views/AdminView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   { path: '/', name: 'Home', component: HomeView },
@@ -31,6 +32,7 @@ const routes: Array<RouteRecordRaw> = [
     component: OrderView,
     meta: { requiresAuth: true },
   },
+  {path: '/admin', name:'Admin', component: AdminView}
 ]
 
 const router = createRouter({

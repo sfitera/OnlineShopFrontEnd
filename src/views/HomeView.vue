@@ -128,10 +128,6 @@ const addToCart = async (product: Product) => {
 };
 
 
-
-
-
-
 /*onMounted(async () => {
   try {
     products.value = await productService.getProducts()
@@ -144,57 +140,103 @@ const addToCart = async (product: Product) => {
 </script>
 
 <style scoped>
+/* 🏠 Celkový layout */
 .home-view {
   text-align: center;
   padding: 2rem;
+  max-width: 1200px;
+  margin: auto;
 }
 
+/* 🔲 Mriežka produktov (vždy 4 produkty na riadok) */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 1rem;
+  grid-template-columns: repeat(4, 1fr); /* 4 produkty na riadok */
+  gap: 1.5rem;
   padding: 1rem;
 }
 
-ul {
-  list-style: none;
-  padding: 0;
-}
-
+/* 🏷 Karty produktov */
 .product-card {
-  border: 1px solid #ccc;
-  padding: 1rem;
+  background: white;
+  border-radius: 10px;
+  padding: 1.2rem;
   text-align: center;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out, box-shadow 0.3s;
 }
 
-.product-image {
-  max-width: 100%;
-  height: auto;
-  margin-bottom: 1rem;
+.product-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* ❌ Nedostupné produkty */
 .unavailable {
-  background-color: #f2f2f2;
+  background-color: #f8f8f8;
   color: #888;
-  opacity: 0.6;
+  opacity: 0.6; /* Zašednuté */
 }
 
-.out-of-stock {
+.unavailable .product-image {
+  filter: grayscale(60%); /* Mierne odfarbenie */
+}
+
+.unavailable .out-of-stock {
   color: red;
   font-weight: bold;
 }
 
-.text-green-500 {
-  color: #10b981;
+/* 🖼 Obrázky produktov */
+.product-image {
+  max-width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.2s ease-in-out;
 }
 
+.product-image:hover {
+  transform: scale(1.05);
+}
+
+/* 🔗 Odkazy na detail produktu */
+.product-card a {
+  text-decoration: none;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.product-card a:hover {
+  color: #007bff;
+}
+
+/* 💰 Cena a stav zásob */
+.product-card p {
+  font-size: 1rem;
+  color: #555;
+  margin: 0.5rem 0;
+}
+
+/* 🛒 Tlačidlá pridania do košíka */
 .add-to-cart-btn {
   background-color: #00bde7;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.7rem 1rem;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: background 0.3s;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.add-to-cart-btn:hover {
+  background-color: #007bb5;
 }
 
 .add-to-cart-btn:disabled {
@@ -202,8 +244,12 @@ ul {
   cursor: not-allowed;
 }
 
+/* 📦 Info o dostupnosti */
 .quantity-info {
   font-size: 0.9rem;
-  color: #666;
+  color: #777;
+  margin-top: 0.5rem;
 }
 </style>
+
+
