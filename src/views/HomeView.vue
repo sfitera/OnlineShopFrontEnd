@@ -32,54 +32,78 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { Product } from '@/models/Product';
 import { ProductService } from '@/services/ProductService';
-import { OrderItem } from '@/models/OrderItem';
-import { OrderItemService } from '@/services/OrderItemService';
-import { cartStore } from '@/stores/cartStore';
+import { OrderItemService } from '@/services/OrderItemService'
+import { useCartStore } from '@/stores/cartStore'
 
+const cartStore = useCartStore();
 const products = ref<Product[]>([]);
 const loading = ref<boolean>(true);
 const error = ref<string | null>(null);
-const cartStatus = ref<{ [key: number]: boolean }>({});
+const cartStatus = ref<Record<number, boolean>>({});
 const route = useRoute();
 const orderItemService = new OrderItemService();
 const productService = new ProductService();
 
+
+// ✅ Automatické načítanie produktov
+const fetchProducts = async () => {
+  try {
+    products.value = await productService.getProducts();
+  } catch {
+    error.value = 'Nepodarilo sa načítať produkty.';
+  } finally {
+    loading.value = false;
+  }
+};
+
+// ✅ Automaticky načítať košík a produkty pri návrate na HomeView
+const refreshData = async () => {
+  console.log("🔄 Obnovujem údaje v HomeView...");
+  await cartStore.loadCart(); // 🔥 Znovu načíta košík
+  await fetchProducts(); // 🔥 Znovu načíta produkty
+};
+
+
+onMounted(fetchProducts);
+watch(route, refreshData)
+
 const filteredProducts = computed(() => {
-  const category = route.query.category as string;
-  const search = route.query.search as string;
-  let filtered = products.value;
+  const category = route.query.category as string
+  const search = route.query.search as string
+  let filtered = products.value
 
   if (category && category !== 'all') {
-    filtered = filtered.filter(product => product.productCategory === category);
+    filtered = filtered.filter(product => product.productCategory === category)
   } else {
-    filtered = [...products.value].sort((a, b) => a.productName.localeCompare(b.productName));
+    filtered = [...products.value].sort((a, b) => a.productName.localeCompare(b.productName))
   }
   if (search) {
-    const searchLower = search.toLowerCase();
+    const searchLower = search.toLowerCase()
     filtered = filtered.filter(product =>
       product.productName.toLowerCase().includes(searchLower) ||
       (product.productDescription && product.productDescription.toLowerCase().includes(searchLower)) ||
       (product.productAuthor && product.productAuthor.toLowerCase().includes(searchLower))
-    );
+    )
   }
 
-  return filtered;
-});
+  return filtered
+})
 
 const getProductImageUrl = (imagePath: string) => {
-  return `http://localhost:8080/${imagePath}`;
-};
+  return `http://localhost:8080/${imagePath}`
+}
 
 const addToCart = async (product: Product) => {
   if (product.productQuantity <= 0) {
-    console.error('Produkt nie je dostupný na pridanie do košíka.');
+    console.error('❌ Produkt nie je dostupný na pridanie do košíka.');
     return;
   }
 
+  console.log("🛒 Pridávam do košíka:", product);
   cartStatus.value[product.id] = true;
   setTimeout(() => {
     cartStatus.value[product.id] = false;
@@ -88,31 +112,35 @@ const addToCart = async (product: Product) => {
   const orderItem = {
     productId: product.id,
     quantity: 1,
+    itemPrice: product.productPrice
   };
 
   try {
-    await orderItemService.addOrderItem(orderItem);
-    cartStore.addItem(product.id, 1);
-    cartStore.triggerUpdate();
+    const addedItem = await orderItemService.addOrderItem(orderItem);
+    console.log("✅ Položka pridaná do košíka:", addedItem);
 
-    // Aktualizácia množstva produktu v databáze
-    const updatedQuantity = product.productQuantity - 1;
-    await productService.updateProductQuantity(product.id, updatedQuantity);
-    product.productQuantity = updatedQuantity;
+    await cartStore.loadCart(); // ✅ Načíta aktuálny košík z API
+
+    product.productQuantity--; // ✅ Odpíšeme zo skladu
   } catch (err) {
-    console.error('Nepodarilo sa pridať produkt do košíka', err);
+    console.error('❌ Nepodarilo sa pridať produkt do košíka', err);
   }
 };
 
-onMounted(async () => {
+
+
+
+
+
+/*onMounted(async () => {
   try {
-    products.value = await productService.getProducts();
+    products.value = await productService.getProducts()
   } catch {
-    error.value = 'Nepodarilo sa načítať produkty.';
+    error.value = 'Nepodarilo sa načítať produkty.'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-});
+})*/
 </script>
 
 <style scoped>

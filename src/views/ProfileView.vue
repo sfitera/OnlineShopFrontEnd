@@ -1,10 +1,10 @@
 <template>
   <section class="profile">
     <h1>Môj profil</h1>
-    <div v-if="user">
-      <p><strong>Meno:</strong> {{ user.username }}</p>
-      <p><strong>Email:</strong> {{ user.userEmail }}</p>
-      <p><strong>Adresa:</strong> {{ user.userAddress }}</p>
+    <div v-if="userStore.user">
+      <p><strong>Meno:</strong> {{ userStore.user.username }}</p>
+      <p><strong>Email:</strong> {{ userStore.user.userEmail }}</p>
+      <p><strong>Adresa:</strong> {{ userStore.user.userAddress }}</p>
 
       <h2>Zmeniť heslo</h2>
       <input v-model="currentPassword" type="password" placeholder="Aktuálne heslo" />
@@ -22,7 +22,12 @@
 import { ref, onMounted } from 'vue'
 import { UserService } from '@/services/UserService'
 import { User } from '@/models/User'
+import { useUserStore } from '@/stores/userStore'
+import axios from 'axios'
 
+const userStore = useUserStore()
+const profileData = ref(null)
+const errorMessage = ref(null)
 const userService = new UserService()
 const user = ref<User | null>(null)
 const currentPassword = ref('')
@@ -30,32 +35,23 @@ const newPassword = ref('')
 const message = ref('')
 
 onMounted(async () => {
-  try {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      user.value = JSON.parse(storedUser)
-    }
-
-    if (user.value && !user.value.id) {
-      const response = await userService.getUserByUsername(user.value.username)
-      user.value.id = response.id
-    }
-
-    if (!user.value) {
-      alert('Používateľské údaje neboli načítané!')
-    }
-  } catch (error) {
-    console.error('Chyba pri načítaní profilu:', error)
+  if (!userStore.user) {
+    console.log("🛠 Používateľské údaje nie sú načítané, skúšam ich načítať...")
+    await userStore.fetchUserData()
   }
 })
 
 const changePassword = async () => {
   try {
-    if (!user.value || !user.value.id) {
+    if (!userStore.user?.id) {
       alert('User ID nie je dostupné!')
       return
     }
-    await userService.updatePassword(user.value.id, currentPassword.value, newPassword.value)
+    await axios.patch(`http://localhost:8080/api/users/update-password`, {
+      userId: userStore.user.id,
+      currentPassword: currentPassword.value,
+      newPassword: newPassword.value
+    })
     alert('Heslo bolo úspešne zmenené!')
   } catch (error) {
     console.error('Chyba pri zmene hesla:', error)
