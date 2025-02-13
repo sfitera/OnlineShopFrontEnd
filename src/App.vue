@@ -213,7 +213,6 @@ const logout = () => {
 
 .nav {
   grid-column: 1 / 4;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -337,8 +336,8 @@ const logout = () => {
   display: block;
   margin: 1rem 0;
   padding: 0.5rem;
-  background: #00bde7;
-  color: #cd0d63;
+  background:#00bde7;
+  color: white;
   text-align: left;
   border: none;
   width: 100%;

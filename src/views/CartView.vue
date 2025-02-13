@@ -19,13 +19,15 @@
         <tbody>
           <tr v-for="item in orderItems" :key="item.id">
             <td>
+              <RouterLink :to="`/products/${item.product?.id}`">
               <img
                 :src="getProductImageUrl(item.product?.productImage || '')"
                 alt="Produktový obrázok"
                 class="product-thumbnail"
               />
+               </RouterLink>
             </td>
-            <td>{{ item.product?.productName }}</td>
+            <td><RouterLink :to="`/products/${item.product?.id}`" class="product-link">{{ item.product?.productName }}</RouterLink></td>
             <td>{{ item.product?.productPrice.toFixed(2) }} €</td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.itemPrice.toFixed(2) }} €</td>
@@ -154,12 +156,6 @@ onMounted(async () => {
 });
 
 
-
-
-
-
-
-
 // Zvýšenie množstva položky
 const increaseQuantity = async (item: OrderItem) => {
   if (!item.product || item.quantity >= item.product.productQuantity) {
@@ -272,47 +268,120 @@ const createOrder = async () => {
 .cart-view {
   padding: 2rem;
   text-align: center;
+  max-width: 900px;
+  margin: 2rem auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem 2.5rem;
 }
 
+/* 📦 Tabuľka košíka */
 .cart-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.cart-table th,
-.cart-table td {
-  border: 1px solid #ccc;
+.cart-table th {
+  background-color: #f4f4f4;
   padding: 1rem;
   text-align: center;
 }
 
-button {
-  margin: 0 0.5rem;
-}
-
-.checkout-details {
-  margin-top: 2rem;
+.cart-table td {
   padding: 1rem;
-  border: 1px solid #ccc;
-  background-color: #f9f9f9;
-  text-align: left;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
 }
 
-.total-price {
-  margin: 1rem 0;
-  font-size: 1.2rem;
+.cart-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* 🖼 Produktové obrázky */
+.product-thumbnail {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.product-thumbnail:hover {
+  transform: scale(1.1);
+}
+
+/* 🔗 Odkazy na produkty */
+.product-link {
+  color: #007bff;
+  text-decoration: none;
   font-weight: bold;
 }
-.product-thumbnail {
-  width: 75px;
-  height: 75px;
-  object-fit: cover;
-  border-radius: 5px;
+
+.product-link:hover {
+  text-decoration: underline;
+}
+
+/* 🔘 Tlačidlá */
+button {
+  background-color: #00bde7;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: background 0.3s ease-in-out;
+  margin: 0.2rem;
+}
+
+button:hover {
+  background-color: #007bb5;
 }
 
 button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+/* ➕➖ Tlačidlá pre množstvo */
+button.quantity-btn {
+  width: 35px;
+  height: 35px;
+  font-size: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+/* 🏷 Celková cena */
+.total-price {
+  margin: 1rem 0;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+/* 🛒 Checkout sekcia */
+.checkout-details {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  text-align: left;
+  border-radius: 8px;
+}
+
+/* 📦 Ak je košík prázdny */
+.empty-cart {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #777;
+  margin-top: 1rem;
+}
 </style>
+

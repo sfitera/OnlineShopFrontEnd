@@ -34,6 +34,13 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
+  const loadCart = async () => {
+    const orderItemService = new OrderItemService();
+    const items = await orderItemService.getOrderItems();
+    orderItems.value = items; // ✅ Aktualizuje Pinia store
+  }
+
+
   const decreaseQuantity = (id: number) => {
     const item = orderItems.value.find(item => item.id === id)
     if (item && item.quantity > 1) {
@@ -55,6 +62,7 @@ export const useCartStore = defineStore('cart', () => {
     clearCart,
     increaseQuantity,
     decreaseQuantity,
-    removeItem
+    removeItem,
+    loadCart
   }
 })
