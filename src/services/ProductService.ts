@@ -14,14 +14,16 @@ export class ProductService {
     return response.data
   }
 
-  async updateProduct(product: Product): Promise<Product> {
-    const response = await axios.patch(`${productUrl}update/${product.id}`, product, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    return response.data
+  async updateProduct(product: Product, newQuantity: number): Promise<void> {
+    try {
+      const updatedProduct = { ...product, productQuantity: newQuantity }; // ✅ Posielame celý objekt
+      await axios.patch(`http://localhost:8080/api/product/update/${product.id}`, updatedProduct);
+      console.log(`✅ Množstvo produktu ${product.id} aktualizované na ${newQuantity}`);
+    } catch (error) {
+      console.error(`❌ Chyba pri aktualizácii množstva produktu ${product.id}:`, error);
+    }
   }
+
 
   async deleteProduct(id: number): Promise<void> {
     await axios.delete(`${productUrl}delete/${id}`, {

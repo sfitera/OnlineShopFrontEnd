@@ -1,30 +1,66 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { User } from '@/models/User'
+import { computed, ref, watch } from 'vue'
+import axios from 'axios'
+
+interface User {
+  id?: number
+  username: string
+  userEmail?: string
+  userAddress?: string
+  roles: string[]
+}
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<User | null>(null)
-  const isLoggedIn = ref<boolean>(false)
+  const token = ref<string | null>(localStorage.getItem('token'))
+  const isLoggedIn = computed(() => !!user.value)
+  const isAdmin = computed(() => user.value?.roles.includes('ADMIN'))
 
-  const setUser = (userData: User) => {
+  const setUser = (userData: User, authToken: string) => {
     user.value = userData
-    isLoggedIn.value = true
+    token.value = authToken
     localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem('token', authToken)
+    localStorage.setItem('username', userData.username)
   }
 
   const clearUser = () => {
     user.value = null
-    isLoggedIn.value = false
+    token.value = null
     localStorage.removeItem('user')
+    localStorage.removeItem('token')
+    localStorage.removeItem('username')
   }
 
-  const loadUserFromStorage = () => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      user.value = JSON.parse(storedUser)
-      isLoggedIn.value = true
+  const fetchUserData = async () => {
+    const storedUsername = localStorage.getItem('username')
+    const storedToken = localStorage.getItem('token')
+
+    if (!storedUsername || !storedToken) {
+      console.warn("❌ Žiadny token alebo username, nemôžem načítať údaje používateľa!")
+      return
+    }
+
+    try {
+      console.log(`🔄 Načítavam údaje používateľa: ${storedUsername}`)
+      const response = await axios.get(`http://localhost:8080/api/users/user-name/${storedUsername}`, {
+        headers: { Authorization: `Bearer ${storedToken}` }
+      })
+
+      // Ošetrenie, aby vždy obsahovalo zoznam rolí
+      user.value = {
+        ...response.data,
+        roles: response.data.roles || [] // Ak backend pošle null, nastavíme prázdne pole
+      }
+      console.log("✅ Používateľské údaje načítané z databázy:", user.value)
+    } catch (error) {
+      console.error("❌ Chyba pri načítaní používateľa z databázy:", error)
     }
   }
 
-  return { user, isLoggedIn, setUser, clearUser, loadUserFromStorage }
+  watch(isLoggedIn, (newValue) => {
+    console.log("🔄 Zmena stavu prihlásenia:", newValue)
+  })
+
+  return { user, token, isLoggedIn, isAdmin, setUser, fetchUserData, clearUser }
 })

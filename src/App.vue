@@ -18,8 +18,14 @@
           >Košík
           <span v-if="cartItemCount > 0" class="cart-badge">{{ cartItemCount }}</span>
         </RouterLink>
-        <RouterLink to="/orders" class="nav-link">Moje objednávky</RouterLink>
-        <RouterLink to="/login" class="nav-link">Prihlásenie</RouterLink>
+
+        <div v-if="isLoggedIn">
+        <RouterLink to="/profile" class="nav-link">Profil</RouterLink>
+        <RouterLink to="/" @click="logout" class="nav-link">Odhlásiť sa</RouterLink>
+        </div>
+        <div v-else>
+          <RouterLink to="/login" class="nav-link">Prihlásiť sa</RouterLink>
+        </div>
       </nav>
     </header>
 
@@ -48,32 +54,15 @@
         <RouterView />
       </main>
 
-      <aside class="sidebar right-sidebar">
-        <div v-if="!userStore.isLoggedIn" class="auth-form">
-          <h3>Prihlásenie</h3>
-          <input v-model="loginData.email" type="email" placeholder="Email" />
-          <input v-model="loginData.password" type="password" placeholder="Heslo" />
-          <button @click="login">Prihlásiť</button>
-          <p>Nemáte účet? <span @click="toggleRegister" class="link">Registrovať</span></p>
-
-          <div v-if="showRegister">
-            <h3>Registrácia</h3>
-            <input v-model="registerData.userName" type="text" placeholder="Meno" />
-            <input v-model="registerData.email" type="email" placeholder="Email" />
-            <input v-model="registerData.password" type="password" placeholder="Heslo" />
-            <input v-model="registerData.address" type="text" placeholder="Adresa" />
-            <button @click="register">Registrovať</button>
-          </div>
-        </div>
-        <div v-else>
+      <!-- PRAVÝ SIDEBAR - Zobraziť len ak je užívateľ prihlásený -->
+      <aside v-if="isLoggedIn" class="sidebar right-sidebar">
           <h3>Vitaj, {{ userStore.user?.username }}</h3>
           <p>Email: {{ userStore.user?.userEmail }}</p>
-          <RouterLink to="/profile" class="nav-link">Profil</RouterLink>
-          <RouterLink to="/cart/" class="nav-link">Košík</RouterLink>
-          <RouterLink to="/">
-            <button @click="logout">Odhlásiť</button>
-          </RouterLink>
-        </div>
+          <RouterLink to="/profile" class="sidebar-btn">Profil</RouterLink>
+          <RouterLink to="/cart/" class="sidebar-btn">Košík</RouterLink>
+          <RouterLink to="/orders" class="sidebar-btn">Moje objednávky</RouterLink>
+          <RouterLink v-if="userStore.isAdmin" to="/admin" class="sidebar-btn">Admin Panel</RouterLink>
+          <RouterLink to="/" @click="logout" class="sidebar-btn">Odhlásiť sa</RouterLink>
       </aside>
     </div>
 
@@ -88,26 +77,55 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
-import { cartStore } from './stores/cartStore'
 import { Category } from '@/models/Product'
 import { UserService } from '@/services/UserService'
 import { User, UserRole } from '@/models/User'
+import { useAuthStore } from '@/stores/authStore';
+import { storeToRefs } from 'pinia'
+import { useCartStore } from '@/stores/cartStore'
 
+const cartStore = useCartStore()
+const authStore = useAuthStore();
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const userService = new UserService()
 const categoryList = ref(Object.values(Category))
-const cartItemCount = computed(() => cartStore.getTotalQuantity())
+const cartItemCount = computed(() => cartStore.cartItemCount)
 const searchQuery = ref('')
 const showRegister = ref(false)
 const loginData = ref({ email: '', password: '' })
 const registerData = ref({ userName: '', email: '', password: '', address: '' })
 
+// Overenie prihlásenia
+const { isLoggedIn, user } = storeToRefs(userStore)
+
+// Debugging logy
+console.log("🏠 Aplikácia sa načítava...")
+console.log("🔐 Užívateľ je prihlásený:", isLoggedIn.value)
+console.log("👤 Užívateľské údaje:", userStore.user)
+
 onMounted(() => {
-  userStore.loadUserFromStorage()
-  cartStore.triggerUpdate()
-})
+  userStore.fetchUserData()
+  if (!isLoggedIn.value) {
+    userStore.fetchUserData()
+    console.warn("🚨 Užívateľ nie je prihlásený!")
+  } else {
+    console.log("✅ Užívateľ je prihlásený:", userStore.user)
+  }
+
+  const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    try {
+      user.value = JSON.parse(storedUser);
+      isLoggedIn.value = true;
+    } catch (error) {
+      console.error("Chyba pri parsovaní JSON:", error);
+      localStorage.removeItem('user'); // Odstráň chybný JSON, aby sa chyba neopakovala
+    }
+  }
+});
+
 
 const formatCategoryName = (category: string) => {
   return category.replace('_', ' ').toUpperCase()
@@ -117,14 +135,18 @@ const updateCartCount = () => {
   cartItemCount.value = cartStore.getTotalQuantity()
 }
 
-const handleSearch = () => {
+watch(searchQuery, () => {
   router.push({ path: '/', query: { ...route.query, search: searchQuery.value } })
-}
-watch(searchQuery, handleSearch)
-
-cartStore.subscribe(() => {
-  console.log('Košík sa zmenil, počet položiek:', cartStore.getTotalQuantity())
 })
+
+watch(() => cartStore.cartItemCount, (newCount) => {
+  console.log("🔄 Počet položiek v košíku sa zmenil:", newCount)
+})
+
+watch(cartStore.orderItems, () => {
+  console.log("🛒 Aktualizácia počtu položiek v košíku:", cartItemCount.value);
+});
+
 
 const login = async () => {
   try {
@@ -159,12 +181,9 @@ const register = async () => {
 
 const logout = () => {
   userStore.clearUser()
-  router.push('/')
-}
+  router.push("/");
+};
 
-const toggleRegister = () => {
-  showRegister.value = !showRegister.value
-}
 </script>
 
 <style scoped>

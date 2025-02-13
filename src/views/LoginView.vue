@@ -2,8 +2,8 @@
   <section class="auth-container">
     <h1>Prihlásenie</h1>
     <div class="auth-form">
-      <input v-model="loginData.email" type="email" placeholder="Email" />
-      <input v-model="loginData.password" type="password" placeholder="Heslo" />
+      <input v-model="loginData.username" type="text" placeholder="Používateľské meno" @keydown.enter="login"/>
+      <input v-model="loginData.password" type="password" placeholder="Heslo" @keydown.enter="login" />
       <button @click="login">Prihlásiť sa</button>
       <p>Nemáte účet? <router-link to="/register" class="link">Registrovať</router-link></p>
     </div>
@@ -11,36 +11,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { UserService } from '@/services/UserService'
+import { useUserStore } from '@/stores/userStore'
+import { useAuthStore } from '@/stores/authStore';
 
+const authStore = useAuthStore();
 const userService = new UserService()
+const userStore = useUserStore()
 const router = useRouter()
-const loginData = ref({ email: '', password: '' })
+const loginData = ref({ username: '', password: '' })
 
 const login = async () => {
   try {
-    const response = await userService.loginUser(loginData.value.email, loginData.value.password)
-    if (response) {
-      console.log('Úspešne prihlásený:', response)
-      localStorage.setItem('user', JSON.stringify(response))
-      router.push('/cart') // 🔄 Po prihlásení presmeruj do košíka
-    } else {
-      alert('Nesprávne prihlasovacie údaje.')
-    }
+    await authStore.login(loginData.value.username, loginData.value.password)
+    router.push('/') // Presmerovanie po prihlásení
   } catch (error) {
-    console.error('Chyba pri prihlasovaní:', error)
-    alert('Chyba pri prihlásení: ' + error.response?.data || error.message)
+    console.error("❌ Chyba pri prihlasovaní:", error)
   }
 }
-
-onMounted(() => {
-  const storedUser = localStorage.getItem('user')
-  if (storedUser) {
-    console.log('Prihlásený používateľ:', JSON.parse(storedUser))
-  }
-})
 </script>
 
 <style scoped>

@@ -1,51 +1,60 @@
-import { reactive, watch } from 'vue'
+import { defineStore } from 'pinia'
+import { ref, computed,watchEffect } from 'vue'
+import { OrderItem } from '@/models/OrderItem'
+import { OrderItemService } from '@/services/OrderItemService'
 
-const cartState = reactive({
-  items: [] as { productId: number; quantity: number }[],
-})
+export const useCartStore = defineStore('cart', () => {
+  const orderItems = ref<OrderItem[]>(JSON.parse(localStorage.getItem('cart') || '[]'))
 
-const cartStore = {
-  getTotalQuantity() {
-    return cartState.items.reduce((acc, item) => acc + item.quantity, 0)
-  },
+  const cartItemCount = computed(() => {
+    return orderItems.value.reduce((sum, item) => sum + item.quantity, 0)
+  })
 
-  updateCart(newItems: { productId: number; quantity: number }[]) {
-    cartState.items = newItems
-    this.triggerUpdate()
-  },
+  const setCartItems = (items: OrderItem[]) => {
+    orderItems.value = items
+  }
 
-  addItem(productId: number, quantity: number) {
-    const existingItem = cartState.items.find((item) => item.productId === productId)
-    if (existingItem) {
-      existingItem.quantity += quantity
-    } else {
-      cartState.items.push({ productId, quantity })
+  const updateCart = () => {
+    orderItems.value = [...orderItems.value] // Vynútime reaktivitu
+  }
+
+  const clearCart = () => {
+    orderItems.value = []
+  }
+
+  // ✅ Sledujeme `orderItems` a aktualizujeme `localStorage`
+  watchEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(orderItems.value))
+  })
+  const increaseQuantity = (id: number) => {
+    const item = orderItems.value.find(item => item.id === id)
+    if (item) {
+      item.quantity++
+      updateCart()
     }
-    this.triggerUpdate()
-  },
+  }
 
-  removeItem(productId: number) {
-    cartState.items = cartState.items.filter((item) => item.productId !== productId)
-    this.triggerUpdate()
-  },
+  const decreaseQuantity = (id: number) => {
+    const item = orderItems.value.find(item => item.id === id)
+    if (item && item.quantity > 1) {
+      item.quantity--
+      updateCart()
+    }
+  }
 
-  clearCart() {
-    cartState.items = []
-    this.triggerUpdate()
-  },
+  const removeItem = (id: number) => {
+    orderItems.value = orderItems.value.filter(item => item.id !== id)
+    updateCart()
+  }
 
-  subscribe(callback: () => void) {
-    watch(() => cartState.items, callback, { deep: true })
-  },
-
-  getCartItems() {
-    return cartState.items
-  },
-
-  triggerUpdate() {
-    // Ručne emitujeme zmenu
-    cartState.items = [...cartState.items]
-  },
-}
-
-export { cartStore }
+  return {
+    orderItems,
+    cartItemCount,
+    setCartItems,
+    updateCart,
+    clearCart,
+    increaseQuantity,
+    decreaseQuantity,
+    removeItem
+  }
+})

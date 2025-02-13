@@ -30,8 +30,9 @@ import { useRoute } from 'vue-router';
 import { ProductService } from '@/services/ProductService';
 import { Product } from '@/models/Product';
 import { OrderItemService } from '@/services/OrderItemService';
-import { cartStore } from '@/stores/cartStore';
+import { useCartStore} from '@/stores/cartStore';
 
+const cartStore = useCartStore();
 const product = ref<Product | null>(null);
 const cartStatus = ref<boolean>(false);
 const route = useRoute();
@@ -42,22 +43,24 @@ const productService = new ProductService();
 
 onMounted(async () => {
   try {
-    product.value = await productService.getProductById(parseInt(productId));
+    product.value = await productService.getProductById(parseInt(productId))
   } catch (error) {
-    console.error('Chyba pri načítaní produktu:', error);
+    console.error('Chyba pri načítaní produktu:', error)
   }
-});
+})
 
 const getProductImageUrl = (imagePath: string) => {
-  return `http://localhost:8080/${imagePath}`;
-};
+  return `http://localhost:8080/${imagePath}`
+}
 
 // Pridanie produktu do košíka s kontrolou dostupnosti
 const addToCart = async (product: Product) => {
   if (product.productQuantity <= 0) {
-    console.error('Produkt nie je dostupný na pridanie do košíka.');
+    console.error('❌ Produkt nie je dostupný na pridanie do košíka.');
     return;
   }
+
+  console.log("🛒 Pridávam do košíka:", product);
 
   cartStatus.value = true;
   setTimeout(() => {
@@ -67,20 +70,30 @@ const addToCart = async (product: Product) => {
   const orderItem = {
     productId: product.id,
     quantity: 1,
+    itemPrice: product.productPrice
   };
 
   try {
-    await orderItemService.addOrderItem(orderItem);
-    cartStore.addItem(product.id, 1);
-    cartStore.triggerUpdate();
+    const addedItem = await orderItemService.addOrderItem(orderItem);
+    console.log("✅ Položka pridaná do košíka:", addedItem);
 
-    // Aktualizácia množstva produktu v databáze
-    product.productQuantity--;
-    await productService.updateProductQuantity(product.id, product.productQuantity);
+    // ✅ Aktualizujeme store správne
+    cartStore.setCartItems([...cartStore.orderItems, addedItem]);
+
+    // ✅ Uložíme košík do `localStorage`, aby sa zachoval po reload-e
+    localStorage.setItem("cart", JSON.stringify(cartStore.orderItems));
+
+    product.productQuantity--; // ✅ Odpíšeme zo skladu
   } catch (err) {
-    console.error('Nepodarilo sa pridať produkt do košíka', err);
+    console.error('❌ Nepodarilo sa pridať produkt do košíka', err);
   }
 };
+
+
+
+
+
+
 </script>
 
 <style scoped>
