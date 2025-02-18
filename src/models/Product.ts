@@ -12,7 +12,7 @@ export enum Category {
   POETRY = 'POETRY',
   ROMANCE = 'ROMANCE',
   SCIENCE = 'SCIENCE',
-  SCIENCE_FICTION = 'SCIENCE_FICTION',
+  SCIFI = 'SCIFI',
   TRAVEL = 'TRAVEL',
 }
 

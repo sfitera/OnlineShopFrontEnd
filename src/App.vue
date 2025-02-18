@@ -150,15 +150,14 @@ watch(cartStore.orderItems, () => {
 
 const login = async () => {
   try {
-    const response = await userService.loginUser(loginData.value.email, loginData.value.password)
-    if (response) {
-      userStore.setUser(response)
-    } else {
-      alert('Nesprávne prihlasovacie údaje.')
-    }
+    const response = await authStore.login(loginData.value.username, loginData.value.password)
+
+    console.log("✅ Prihlasovací response:", response) // 🔍 Debugging
+    userStore.setUser(response)
+
+    router.push('/') // Presmerovanie po prihlásení
   } catch (error) {
-    console.error('Chyba pri prihlasovaní:', error)
-    alert('Chyba pri prihlásení: ' + error.response?.data || error.message)
+    console.error("❌ Chyba pri prihlasovaní:", error)
   }
 }
 
@@ -195,6 +194,11 @@ const logout = () => {
 }
 
 .header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
   background: linear-gradient(
     45deg,
     #1a1927,
@@ -206,9 +210,7 @@ const logout = () => {
     #e81111,
     #fa8112
   );
-  color: white;
   padding: 1rem;
-  text-align: center;
 }
 
 .nav {
@@ -219,6 +221,8 @@ const logout = () => {
   padding: 0 2rem;
   color: white;
 }
+
+
 
 .nav-link {
   text-decoration: none;
@@ -269,11 +273,11 @@ const logout = () => {
   background-color: #007bff;
 }
 
-/* Layout pre obsah */
+/* 📌 Pridáme `padding-top`, aby sa obsah neprekrýval s navbarom */
 .content-wrapper {
   display: flex;
   flex: 1;
-  padding: 1rem;
+  padding-top: 80px; /* Kompenzuje fixný header */
 }
 
 .sidebar {
@@ -282,20 +286,36 @@ const logout = () => {
   padding: 1rem;
 }
 
+/* 📌 Fixný ľavý sidebar */
 .left-sidebar {
+  position: fixed;
+  top: 80px; /* Po headeri */
+  left: 0;
+  width: 20%;
+  height: calc(100vh - 80px); /* Po zvyšok stránky */
+  overflow-y: auto;
   background: white;
   padding: 1.5rem;
 }
 
+/* 📌 Fixný pravý sidebar (len ak je používateľ prihlásený) */
 .right-sidebar {
+  position: fixed;
+  top: 80px;
+  right: 0;
+  width: 20%;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
   background: white;
   padding: 1.5rem;
 }
 
+/* 📌 Hlavný obsah sa posunie doprava a vyplní stred */
 .main-content {
   width: 60%;
+  margin-left: 20%;
+  margin-right: 20%;
   padding: 1rem;
-  border: 1px solid #ddd;
 }
 
 /* Footer */

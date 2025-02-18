@@ -46,8 +46,14 @@ export class UserService {
 
   async loginUser(email: string, password: string): Promise<{ user: User; token: string }> {
     const response = await axios.post(`${userUrl}login`, { email, password }, this.getAuthHeaders())
-    return response.data
+
+    // ✅ Oprava: Uložíme roly správne do `userRoles`
+    const userData = response.data.user;
+    userData.userRoles = userData.userRoles || [];
+
+    return { user: userData, token: response.data.token };
   }
+
 
   async updatePassword(userId: number, currentPassword: string, newPassword: string): Promise<void> {
     if (!userId) throw new Error('User ID nesmie byť null.')

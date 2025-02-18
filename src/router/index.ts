@@ -11,6 +11,9 @@ import RegisterView from '@/views/RegisterView.vue'
 import LoginView from '@/views/LoginView.vue'
 import OrderView from '@/views/OrderView.vue'
 import AdminView from '@/views/AdminView.vue'
+import AdminProducts from '@/views/AdminProducts.vue'
+import AdminOrders from '@/views/AdminOrders.vue'
+import AdminUsers from '@/views/AdminUsers.vue'
 
 const routes: Array<RouteRecordRaw> = [
   { path: '/', name: 'Home', component: HomeView },
@@ -20,6 +23,11 @@ const routes: Array<RouteRecordRaw> = [
   { path: '/register', component: RegisterView },
   { path: '/login', name: 'Login', component: LoginView },
   { path: '/cart',name: 'Cart', component: CartView, },
+  { path: '/admin', component: AdminView, children: [
+    { path: 'products', component: AdminProducts },
+    { path: 'users', component: AdminUsers },
+    { path: 'orders', component: AdminOrders },
+  ]},
   {
     path: '/profile',
     name: 'Profile',
