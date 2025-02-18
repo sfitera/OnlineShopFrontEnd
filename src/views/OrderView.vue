@@ -73,22 +73,40 @@
 import { ref, onMounted, computed } from 'vue'
 import { Order } from '@/models/Order'
 import { OrderService } from '@/services/OrderService'
+import { useUserStore } from '@/stores/userStore'
 
 const orderService = new OrderService()
+const userStore = useUserStore()
 const orders = ref<Order[]>([])
 const loading = ref<boolean>(true)
 const error = ref<string | null>(null)
 const expandedOrder = ref<number | null>(null)
 
 onMounted(async () => {
-  try {
-    orders.value = await orderService.getOrders()
-  } catch {
-    error.value = '❌ Nepodarilo sa načítať objednávky.'
-  } finally {
-    loading.value = false
+  console.log("🔄 [OrderView] Overujem používateľa...");
+  userStore.fetchUserData(); // ✅ Načítame údaje používateľa
+
+  console.log("👤 [OrderView] Užívateľ v userStore:", userStore.user);
+
+  if (!userStore.user?.id) {
+    console.error("❌ [OrderView] Používateľ nie je prihlásený!");
+    error.value = '❌ Chyba: Používateľ nie je prihlásený.';
+    return;
   }
-})
+
+  try {
+    console.log(`🔍 Načítavam objednávky pre userId: ${userStore.user.id}`);
+    orders.value = await orderService.getOrdersByUserId(userStore.user.id);
+  } catch (err) {
+    console.error('❌ Chyba pri načítaní objednávok:', err);
+    error.value = '❌ Nepodarilo sa načítať objednávky.';
+  } finally {
+    loading.value = false;
+  }
+});
+
+
+
 
 // 📌 Formátovanie dátumu
 const formatDate = (dateString: string) => {

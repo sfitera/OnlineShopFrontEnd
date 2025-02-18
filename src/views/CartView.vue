@@ -86,9 +86,6 @@ import { useUserStore } from '@/stores/userStore'
 import { useCartStore } from '@/stores/cartStore'
 import { storeToRefs } from 'pinia'
 
-
-
-
 // Košík
 const cartStore = useCartStore()
 const loading = ref<boolean>(true)
@@ -226,8 +223,12 @@ const getNumberOfItems = async () => {
 
 // Metóda na vytvorenie objednávky
 const createOrder = async () => {
+  console.log("🔄 [CartView] Overujem používateľa...");
+  userStore.fetchUserData(); // ✅ Uistíme sa, že údaje sú aktuálne
+
   if (!userStore.user || !userStore.user.id) {
-    alert('Chyba: Musíte byť prihlásený na vytvorenie objednávky!');
+    console.error("❌ [CartView] Používateľ nie je prihlásený!");
+    alert('❌ Chyba: Musíte byť prihlásený na vytvorenie objednávky!');
     return;
   }
 
@@ -242,22 +243,22 @@ const createOrder = async () => {
     orderDate: new Date().toISOString().split('T')[0],
   };
 
-  console.log('Odosielam objednávku:', newOrder);
+  console.log('📦 [CartView] Odosielam objednávku:', newOrder);
 
   try {
     const response = await orderService.createOrder(newOrder);
-    alert(`Objednávka bola úspešne vytvorená! ID: ${response.id}`);
+    alert(`✅ Objednávka bola úspešne vytvorená! ID: ${response.id}`);
 
-    // ✅ Vyčistiť košík po objednávke
     orderItems.value = [];
     cartStore.clearCart();
-    localStorage.removeItem('cart'); // Odstrániť localStorage
-
+    localStorage.removeItem('cart');
   } catch (error) {
-    console.error('Chyba pri vytváraní objednávky:', error);
-    alert('Nepodarilo sa vytvoriť objednávku.');
+    console.error('❌ [CartView] Chyba pri vytváraní objednávky:', error);
+    alert('❌ Nepodarilo sa vytvoriť objednávku.');
   }
 };
+
+
 
 
 

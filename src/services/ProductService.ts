@@ -5,14 +5,20 @@ const productUrl = 'http://localhost:8080/api/products/'
 
 export class ProductService {
 
-  async addProduct(product: Product): Promise<Product> {
-    const response = await axios.post(`${productUrl}add/`, product, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    return response.data
-  }
+    async addProduct(product: Product): Promise<Product> {
+      try {
+        const response = await axios.post(`${productUrl}add`, product, {
+          headers: { 'Content-Type': 'application/json' },
+        });
+        console.log("✅ Produkt úspešne pridaný:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("❌ Chyba pri pridávaní produktu:", error);
+        throw error;
+      }
+    }
+
+
 
   async updateProduct(product: Product, newQuantity: number): Promise<void> {
     try {

@@ -29,7 +29,7 @@ const register = async () => {
       registerData.value.password,
       registerData.value.address,
       registerData.value.email,
-      UserRole.USER,
+      [UserRole.USER],
     )
     await userService.addUser(newUser)
     alert('Registrácia úspešná! Prihláste sa.')
