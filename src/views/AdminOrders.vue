@@ -35,8 +35,8 @@
       </tbody>
     </table>
 
-        <!-- Detaily objednávky -->
-        <div v-if="expandedOrder" class="order-details">
+    <!-- Detaily objednávky -->
+    <div v-if="expandedOrder" class="order-details">
       <h2>🛒 Detaily objednávky #{{ expandedOrder }}</h2>
       <table class="details-table">
         <thead>
@@ -52,8 +52,11 @@
           <tr v-for="item in selectedOrder?.orderItems" :key="item.id">
             <td>
               <RouterLink :to="`/products/${item.product?.id}`">
-                <img :src="getProductImageUrl(item.product?.productImage)" alt="Produktový obrázok"
-                  class="product-thumbnail"/>
+                <img
+                  :src="getProductImageUrl(item.product?.productImage)"
+                  alt="Produktový obrázok"
+                  class="product-thumbnail"
+                />
               </RouterLink>
             </td>
             <td>
@@ -152,9 +155,7 @@ const formatDate = (date: string) => {
   })
 }
 // 📌 Získanie aktuálne vybratej objednávky
-const selectedOrder = computed(() =>
-  orders.value.find((order) => order.id === expandedOrder.value)
-)
+const selectedOrder = computed(() => orders.value.find((order) => order.id === expandedOrder.value))
 
 // 📌 Prepínanie detailov objednávky
 const toggleDetails = (orderId: number) => {
@@ -172,10 +173,9 @@ const statusClass = (status: string) => {
     'status-paid': status === 'PAID',
     'status-shipped': status === 'SHIPPED',
     'status-delivered': status === 'DELIVERED',
-    'status-cancelled': status === 'CANCELLED'
+    'status-cancelled': status === 'CANCELLED',
   }
 }
-
 
 onMounted(async () => {
   try {

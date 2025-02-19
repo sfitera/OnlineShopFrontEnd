@@ -3,7 +3,6 @@
     <h2>Správa užívateľov</h2>
     <button @click="showAddModal = true" class="action-button">Pridať užívateľa</button>
 
-
     <table class="admin-table">
       <thead>
         <tr>
@@ -36,29 +35,29 @@
 
     <!-- MODÁLNE OKNO NA ÚPRAVU -->
     <div v-if="showEditModal" class="modal">
-  <div class="modal-content">
-    <h3>Upraviť používateľa</h3>
-    <input v-model="editedUser.username" placeholder="Meno" />
-    <input v-model="editedUser.userPassword" type="password" placeholder="Heslo" />
-    <input v-model="editedUser.userEmail" placeholder="Email" />
-    <input v-model="editedUser.userAddress" placeholder="Adresa" />
+      <div class="modal-content">
+        <h3>Upraviť používateľa</h3>
+        <input v-model="editedUser.username" placeholder="Meno" />
+        <input v-model="editedUser.userPassword" type="password" placeholder="Heslo" />
+        <input v-model="editedUser.userEmail" placeholder="Email" />
+        <input v-model="editedUser.userAddress" placeholder="Adresa" />
 
-    <h4>Roly používateľa:</h4>
-    <div v-for="role in editedUser.userRoles" :key="role" class="role-item">
-      <span>{{ role }}</span>
-      <button @click="removeRole(role)">➖</button>
+        <h4>Roly používateľa:</h4>
+        <div v-for="role in editedUser.userRoles" :key="role" class="role-item">
+          <span>{{ role }}</span>
+          <button @click="removeRole(role)">➖</button>
+        </div>
+
+        <select v-model="newRole">
+          <option value="USER">USER</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
+        <button @click="addRole">➕ Pridať rolu</button>
+
+        <button @click="saveEdit" class="action-button">Uložiť</button>
+        <button @click="showEditModal = false" class="action-button delete-button">Zrušiť</button>
+      </div>
     </div>
-
-    <select v-model="newRole">
-      <option value="USER">USER</option>
-      <option value="ADMIN">ADMIN</option>
-    </select>
-    <button @click="addRole">➕ Pridať rolu</button>
-
-    <button @click="saveEdit"  class="action-button">Uložiť</button>
-    <button @click="showEditModal = false" class="action-button delete-button">Zrušiť</button>
-  </div>
-</div>
 
     <!-- MODÁLNE OKNO NA PRIDANIE -->
     <div v-if="showAddModal" class="modal">
@@ -89,88 +88,85 @@ const users = ref<User[]>([])
 const showEditModal = ref(false)
 const showAddModal = ref(false)
 const editedUser = ref<User | null>(null)
-const newUser = ref<User>({ username: '', userEmail: '', userPassword: '', userRole: 'USER', userAddress: '', userRoles: ['USER'] } as User)
-  const newRole = ref<string>('USER');
-
+const newUser = ref<User>({
+  username: '',
+  userEmail: '',
+  userPassword: '',
+  userRole: 'USER',
+  userAddress: '',
+  userRoles: ['USER'],
+} as User)
+const newRole = ref<string>('USER')
 
 // ✅ Načítanie užívateľov zo servera
 const fetchUsers = async () => {
   try {
-    const response = await userService.getUsers();
+    const response = await userService.getUsers()
 
-    users.value = response.map(user => ({
+    users.value = response.map((user) => ({
       ...user,
-      userRoles: user.userRoles ? [...user.userRoles] : [] // ✅ Oprava
-    }));
+      userRoles: user.userRoles ? [...user.userRoles] : [], // ✅ Oprava
+    }))
 
-    console.log("✅ Používateľské roly načítané:", users.value);
+    console.log('✅ Používateľské roly načítané:', users.value)
   } catch (error) {
-    console.error('❌ Chyba pri načítaní užívateľov:', error);
+    console.error('❌ Chyba pri načítaní užívateľov:', error)
   }
-};
-
+}
 
 const formatRoles = (roles: string[] | undefined) => {
-  if (!roles || roles.length === 0) return 'Žiadne roly';
-  return roles.join(', '); // ✅ Spojíme všetky roly správne
-};
-
-
-
+  if (!roles || roles.length === 0) return 'Žiadne roly'
+  return roles.join(', ') // ✅ Spojíme všetky roly správne
+}
 
 // ✅ ÚPRAVA UŽÍVATEĽA
 const editUser = (user: User) => {
   editedUser.value = {
     ...user,
-    userRoles: Array.isArray(user.userRoles) ? [...user.userRoles] : ['USER'] // ✅ Oprava
-  };
-  showEditModal.value = true;
-};
-
+    userRoles: Array.isArray(user.userRoles) ? [...user.userRoles] : ['USER'], // ✅ Oprava
+  }
+  showEditModal.value = true
+}
 
 const saveEdit = async () => {
-  if (!editedUser.value) return;
+  if (!editedUser.value) return
 
   try {
     await userService.updateUser({
       ...editedUser.value,
       userRoles: [...editedUser.value.userRoles], // ✅ Posielame upravené roly
-    });
+    })
 
-    showEditModal.value = false;
-    fetchUsers();
+    showEditModal.value = false
+    fetchUsers()
   } catch (error) {
-    console.error('❌ Chyba pri úprave užívateľa:', error);
-    alert('Nepodarilo sa upraviť užívateľa.');
+    console.error('❌ Chyba pri úprave užívateľa:', error)
+    alert('Nepodarilo sa upraviť užívateľa.')
   }
-};
-
-
-
+}
 
 // ✅ PRIDANIE UŽÍVATEĽA
 const addUser = async () => {
   if (!newUser.value.username || !newUser.value.userEmail || !newUser.value.userPassword) {
     alert('Vyplňte všetky povinné polia!')
-    return;
+    return
   }
 
   const userData = {
     ...newUser.value,
-    userRoles: Array.isArray(newUser.value.userRoles) ? newUser.value.userRoles : ['USER']
-  };
+    userRoles: Array.isArray(newUser.value.userRoles) ? newUser.value.userRoles : ['USER'],
+  }
 
   try {
-    await userService.addUser(userData);
-    showAddModal.value = false;
-    fetchUsers();
-    resetNewUser();
+    await userService.addUser(userData)
+    showAddModal.value = false
+    fetchUsers()
+    resetNewUser()
   } catch (error) {
-    console.error('❌ Chyba pri pridávaní užívateľa:', error);
-    alert('Nepodarilo sa pridať užívateľa.');
+    console.error('❌ Chyba pri pridávaní užívateľa:', error)
+    alert('Nepodarilo sa pridať užívateľa.')
   }
-};
-
+}
 
 // ✅ RESET FORMULÁRA PO PRIDANÍ
 const resetNewUser = () => {
@@ -179,7 +175,7 @@ const resetNewUser = () => {
     userEmail: '',
     userPassword: '',
     userAddress: '',
-    userRoles: ['USER']
+    userRoles: ['USER'],
   } as User
 }
 
@@ -201,19 +197,18 @@ const deleteUser = async (id: number) => {
 }
 
 const addRole = () => {
-  if (!editedUser.value) return;
+  if (!editedUser.value) return
   if (!editedUser.value.userRoles.includes(newRole.value)) {
-    editedUser.value.userRoles.push(newRole.value); // ✅ Pridáme novú rolu
+    editedUser.value.userRoles.push(newRole.value) // ✅ Pridáme novú rolu
   }
-};
+}
 
 const removeRole = (role: string) => {
-  if (!editedUser.value) return;
-  editedUser.value.userRoles = editedUser.value.userRoles.filter(r => r !== role); // ✅ Odstránime rolu
-};
+  if (!editedUser.value) return
+  editedUser.value.userRoles = editedUser.value.userRoles.filter((r) => r !== role) // ✅ Odstránime rolu
+}
 
 onMounted(fetchUsers)
-
 </script>
 
 <style scoped>
@@ -310,5 +305,4 @@ onMounted(fetchUsers)
   border: 1px solid #ddd;
   border-radius: 5px;
 }
-
 </style>

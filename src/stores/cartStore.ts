@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed,watchEffect } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import { OrderItem } from '@/models/OrderItem'
 import { OrderItemService } from '@/services/OrderItemService'
 
@@ -27,7 +27,7 @@ export const useCartStore = defineStore('cart', () => {
     localStorage.setItem('cart', JSON.stringify(orderItems.value))
   })
   const increaseQuantity = (id: number) => {
-    const item = orderItems.value.find(item => item.id === id)
+    const item = orderItems.value.find((item) => item.id === id)
     if (item) {
       item.quantity++
       updateCart()
@@ -35,14 +35,13 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   const loadCart = async () => {
-    const orderItemService = new OrderItemService();
-    const items = await orderItemService.getOrderItems();
-    orderItems.value = items; // ✅ Aktualizuje Pinia store
+    const orderItemService = new OrderItemService()
+    const items = await orderItemService.getOrderItems()
+    orderItems.value = items // ✅ Aktualizuje Pinia store
   }
 
-
   const decreaseQuantity = (id: number) => {
-    const item = orderItems.value.find(item => item.id === id)
+    const item = orderItems.value.find((item) => item.id === id)
     if (item && item.quantity > 1) {
       item.quantity--
       updateCart()
@@ -50,7 +49,7 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   const removeItem = (id: number) => {
-    orderItems.value = orderItems.value.filter(item => item.id !== id)
+    orderItems.value = orderItems.value.filter((item) => item.id !== id)
     updateCart()
   }
 
@@ -63,6 +62,6 @@ export const useCartStore = defineStore('cart', () => {
     increaseQuantity,
     decreaseQuantity,
     removeItem,
-    loadCart
+    loadCart,
   }
 })

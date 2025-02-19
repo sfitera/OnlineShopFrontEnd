@@ -50,15 +50,18 @@
           <tr v-for="item in selectedOrder?.orderItems" :key="item.id">
             <td>
               <RouterLink :to="`/products/${item.product?.id}`">
-              <img
-                :src="getProductImageUrl(item.product?.productImage)"
-                alt="Produktový obrázok"
-                class="product-thumbnail"
-              />
-            </RouterLink>
+                <img
+                  :src="getProductImageUrl(item.product?.productImage)"
+                  alt="Produktový obrázok"
+                  class="product-thumbnail"
+                />
+              </RouterLink>
             </td>
             <td>
-            <RouterLink :to="`/products/${item.product?.id}`" class="product-link">{{ item.product?.productName }}</RouterLink></td>
+              <RouterLink :to="`/products/${item.product?.id}`" class="product-link">{{
+                item.product?.productName
+              }}</RouterLink>
+            </td>
             <td>{{ item.product?.productPrice.toFixed(2) }} €</td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.itemPrice.toFixed(2) }} €</td>
@@ -83,30 +86,27 @@ const error = ref<string | null>(null)
 const expandedOrder = ref<number | null>(null)
 
 onMounted(async () => {
-  console.log("🔄 [OrderView] Overujem používateľa...");
-  userStore.fetchUserData(); // ✅ Načítame údaje používateľa
+  console.log('🔄 [OrderView] Overujem používateľa...')
+  userStore.fetchUserData() // ✅ Načítame údaje používateľa
 
-  console.log("👤 [OrderView] Užívateľ v userStore:", userStore.user);
+  console.log('👤 [OrderView] Užívateľ v userStore:', userStore.user)
 
   if (!userStore.user?.id) {
-    console.error("❌ [OrderView] Používateľ nie je prihlásený!");
-    error.value = '❌ Chyba: Používateľ nie je prihlásený.';
-    return;
+    console.error('❌ [OrderView] Používateľ nie je prihlásený!')
+    error.value = '❌ Chyba: Používateľ nie je prihlásený.'
+    return
   }
 
   try {
-    console.log(`🔍 Načítavam objednávky pre userId: ${userStore.user.id}`);
-    orders.value = await orderService.getOrdersByUserId(userStore.user.id);
+    console.log(`🔍 Načítavam objednávky pre userId: ${userStore.user.id}`)
+    orders.value = await orderService.getOrdersByUserId(userStore.user.id)
   } catch (err) {
-    console.error('❌ Chyba pri načítaní objednávok:', err);
-    error.value = '❌ Nepodarilo sa načítať objednávky.';
+    console.error('❌ Chyba pri načítaní objednávok:', err)
+    error.value = '❌ Nepodarilo sa načítať objednávky.'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-});
-
-
-
+})
 
 // 📌 Formátovanie dátumu
 const formatDate = (dateString: string) => {
@@ -120,14 +120,12 @@ const statusClass = (status: string) => {
     'status-paid': status === 'PAID',
     'status-shipped': status === 'SHIPPED',
     'status-delivered': status === 'DELIVERED',
-    'status-cancelled': status === 'CANCELLED'
+    'status-cancelled': status === 'CANCELLED',
   }
 }
 
 // 📌 Získanie aktuálne vybratej objednávky
-const selectedOrder = computed(() =>
-  orders.value.find((order) => order.id === expandedOrder.value)
-)
+const selectedOrder = computed(() => orders.value.find((order) => order.id === expandedOrder.value))
 
 // 📌 Prepínanie detailov objednávky
 const toggleDetails = (orderId: number) => {
@@ -181,11 +179,36 @@ const getProductImageUrl = (imagePath: string) => {
 }
 
 /* 🎨 Status objednávky - farebné štítky */
-.status-created { background: #f7d048; color: black; padding: 5px 10px; border-radius: 12px; }
-.status-paid { background: #5dc1b9; color: black; padding: 5px 10px; border-radius: 12px; }
-.status-shipped { background: #ff9800; color: white; padding: 5px 10px; border-radius: 12px; }
-.status-delivered { background: #4caf50; color: white; padding: 5px 10px; border-radius: 12px; }
-.status-cancelled { background: #e81123; color: white; padding: 5px 10px; border-radius: 12px; }
+.status-created {
+  background: #f7d048;
+  color: black;
+  padding: 5px 10px;
+  border-radius: 12px;
+}
+.status-paid {
+  background: #5dc1b9;
+  color: black;
+  padding: 5px 10px;
+  border-radius: 12px;
+}
+.status-shipped {
+  background: #ff9800;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 12px;
+}
+.status-delivered {
+  background: #4caf50;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 12px;
+}
+.status-cancelled {
+  background: #e81123;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 12px;
+}
 
 /* 🎨 Sekcia detailov objednávky */
 .order-details {

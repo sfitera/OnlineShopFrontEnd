@@ -20,8 +20,8 @@
         </RouterLink>
 
         <div v-if="isLoggedIn">
-        <RouterLink to="/profile" class="nav-link">Profil</RouterLink>
-        <RouterLink to="/" @click="logout" class="nav-link">Odhlásiť sa</RouterLink>
+          <RouterLink to="/profile" class="nav-link">Profil</RouterLink>
+          <RouterLink to="/" @click="logout" class="nav-link">Odhlásiť sa</RouterLink>
         </div>
         <div v-else>
           <RouterLink to="/login" class="nav-link">Prihlásiť sa</RouterLink>
@@ -56,13 +56,15 @@
 
       <!-- PRAVÝ SIDEBAR - Zobraziť len ak je užívateľ prihlásený -->
       <aside v-if="isLoggedIn" class="sidebar right-sidebar">
-          <h3>Vitaj, {{ userStore.user?.username }}</h3>
-          <p>Email: {{ userStore.user?.userEmail }}</p>
-          <RouterLink to="/profile" class="sidebar-btn">Profil</RouterLink>
-          <RouterLink to="/cart/" class="sidebar-btn">Košík</RouterLink>
-          <RouterLink to="/orders" class="sidebar-btn">Moje objednávky</RouterLink>
-          <RouterLink v-if="userStore.isAdmin" to="/admin" class="sidebar-btn">Admin Panel</RouterLink>
-          <RouterLink to="/" @click="logout" class="sidebar-btn">Odhlásiť sa</RouterLink>
+        <h3>Vitaj, {{ userStore.user?.username }}</h3>
+        <p>Email: {{ userStore.user?.userEmail }}</p>
+        <RouterLink to="/profile" class="sidebar-btn">Profil</RouterLink>
+        <RouterLink to="/cart/" class="sidebar-btn">Košík</RouterLink>
+        <RouterLink to="/orders" class="sidebar-btn">Moje objednávky</RouterLink>
+        <RouterLink v-if="userStore.isAdmin" to="/admin" class="sidebar-btn"
+          >Admin Panel</RouterLink
+        >
+        <RouterLink to="/" @click="logout" class="sidebar-btn">Odhlásiť sa</RouterLink>
       </aside>
     </div>
 
@@ -80,12 +82,12 @@ import { useUserStore } from '@/stores/userStore'
 import { Category } from '@/models/Product'
 import { UserService } from '@/services/UserService'
 import { User, UserRole } from '@/models/User'
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore'
 import { storeToRefs } from 'pinia'
 import { useCartStore } from '@/stores/cartStore'
 
 const cartStore = useCartStore()
-const authStore = useAuthStore();
+const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
@@ -101,31 +103,30 @@ const registerData = ref({ userName: '', email: '', password: '', address: '' })
 const { isLoggedIn, user } = storeToRefs(userStore)
 
 // Debugging logy
-console.log("🏠 Aplikácia sa načítava...")
-console.log("🔐 Užívateľ je prihlásený:", isLoggedIn.value)
-console.log("👤 Užívateľské údaje:", userStore.user)
+console.log('🏠 Aplikácia sa načítava...')
+console.log('🔐 Užívateľ je prihlásený:', isLoggedIn.value)
+console.log('👤 Užívateľské údaje:', userStore.user)
 
 onMounted(() => {
   userStore.fetchUserData()
   if (!isLoggedIn.value) {
     userStore.fetchUserData()
-    console.warn("🚨 Užívateľ nie je prihlásený!")
+    console.warn('🚨 Užívateľ nie je prihlásený!')
   } else {
-    console.log("✅ Užívateľ je prihlásený:", userStore.user)
+    console.log('✅ Užívateľ je prihlásený:', userStore.user)
   }
 
-  const storedUser = localStorage.getItem('user');
+  const storedUser = localStorage.getItem('user')
   if (storedUser) {
     try {
-      user.value = JSON.parse(storedUser);
-      isLoggedIn.value = true;
+      user.value = JSON.parse(storedUser)
+      isLoggedIn.value = true
     } catch (error) {
-      console.error("Chyba pri parsovaní JSON:", error);
-      localStorage.removeItem('user'); // Odstráň chybný JSON, aby sa chyba neopakovala
+      console.error('Chyba pri parsovaní JSON:', error)
+      localStorage.removeItem('user') // Odstráň chybný JSON, aby sa chyba neopakovala
     }
   }
-});
-
+})
 
 const formatCategoryName = (category: string) => {
   return category.replace('_', ' ').toUpperCase()
@@ -139,25 +140,27 @@ watch(searchQuery, () => {
   router.push({ path: '/', query: { ...route.query, search: searchQuery.value } })
 })
 
-watch(() => cartStore.cartItemCount, (newCount) => {
-  console.log("🔄 Počet položiek v košíku sa zmenil:", newCount)
-})
+watch(
+  () => cartStore.cartItemCount,
+  (newCount) => {
+    console.log('🔄 Počet položiek v košíku sa zmenil:', newCount)
+  },
+)
 
 watch(cartStore.orderItems, () => {
-  console.log("🛒 Aktualizácia počtu položiek v košíku:", cartItemCount.value);
-});
-
+  console.log('🛒 Aktualizácia počtu položiek v košíku:', cartItemCount.value)
+})
 
 const login = async () => {
   try {
     const response = await authStore.login(loginData.value.username, loginData.value.password)
 
-    console.log("✅ Prihlasovací response:", response) // 🔍 Debugging
+    console.log('✅ Prihlasovací response:', response) // 🔍 Debugging
     userStore.setUser(response)
 
     router.push('/') // Presmerovanie po prihlásení
   } catch (error) {
-    console.error("❌ Chyba pri prihlasovaní:", error)
+    console.error('❌ Chyba pri prihlasovaní:', error)
   }
 }
 
@@ -180,9 +183,8 @@ const register = async () => {
 
 const logout = () => {
   userStore.clearUser()
-  router.push("/");
-};
-
+  router.push('/')
+}
 </script>
 
 <style scoped>
@@ -211,7 +213,7 @@ const logout = () => {
     #fa8112
   );
   padding: 1rem;
-  box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .nav {
@@ -222,8 +224,6 @@ const logout = () => {
   padding: 0 2rem;
   color: white;
 }
-
-
 
 .nav-link {
   text-decoration: none;
@@ -291,7 +291,17 @@ const logout = () => {
 
 /* Footer */
 .footer {
-  background: linear-gradient(45deg, #1a1927, #1a1927, #fed40a, #87d72f, #00bde7, #cd0d63, #e81111, #fa8112);
+  background: linear-gradient(
+    45deg,
+    #1a1927,
+    #1a1927,
+    #fed40a,
+    #87d72f,
+    #00bde7,
+    #cd0d63,
+    #e81111,
+    #fa8112
+  );
   color: white;
   text-align: center;
   padding: 1rem;

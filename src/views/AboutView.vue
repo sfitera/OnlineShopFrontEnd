@@ -4,7 +4,9 @@
     <p class="intro-text">Toto je záverečný projekt kurzu SDA Java.</p>
 
     <div class="about-content">
-      <p>Je to jednoduchý internetový obchod s produktmi, nákupným košíkom a overovaním používateľov.</p>
+      <p>
+        Je to jednoduchý internetový obchod s produktmi, nákupným košíkom a overovaním používateľov.
+      </p>
       <p>Pozrite si produkty, pridajte ich do košíka a prejdite k pokladni.</p>
       <p>Alebo sa prihláste a skontrolujte svoje objednávky.</p>
     </div>
@@ -13,8 +15,7 @@
   </section>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 /* 📌 Celkové rozloženie sekcie */

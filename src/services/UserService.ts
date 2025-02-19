@@ -48,14 +48,17 @@ export class UserService {
     const response = await axios.post(`${userUrl}login`, { email, password }, this.getAuthHeaders())
 
     // ✅ Oprava: Uložíme roly správne do `userRoles`
-    const userData = response.data.user;
-    userData.userRoles = userData.userRoles || [];
+    const userData = response.data.user
+    userData.userRoles = userData.userRoles || []
 
-    return { user: userData, token: response.data.token };
+    return { user: userData, token: response.data.token }
   }
 
-
-  async updatePassword(userId: number, currentPassword: string, newPassword: string): Promise<void> {
+  async updatePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
     if (!userId) throw new Error('User ID nesmie byť null.')
     await axios.patch(
       `${userUrl}update-password`,

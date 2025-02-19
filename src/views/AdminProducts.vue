@@ -3,7 +3,6 @@
     <h2>Správa produktov</h2>
     <button @click="showAddModal = true" class="action-button">Pridať produkt</button>
 
-
     <table class="admin-table">
       <thead>
         <tr>

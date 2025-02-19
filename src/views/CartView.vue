@@ -20,14 +20,18 @@
           <tr v-for="item in orderItems" :key="item.id">
             <td>
               <RouterLink :to="`/products/${item.product?.id}`">
-              <img
-                :src="getProductImageUrl(item.product?.productImage || '')"
-                alt="Produktový obrázok"
-                class="product-thumbnail"
-              />
-               </RouterLink>
+                <img
+                  :src="getProductImageUrl(item.product?.productImage || '')"
+                  alt="Produktový obrázok"
+                  class="product-thumbnail"
+                />
+              </RouterLink>
             </td>
-            <td><RouterLink :to="`/products/${item.product?.id}`" class="product-link">{{ item.product?.productName }}</RouterLink></td>
+            <td>
+              <RouterLink :to="`/products/${item.product?.id}`" class="product-link">{{
+                item.product?.productName
+              }}</RouterLink>
+            </td>
             <td>{{ item.product?.productPrice.toFixed(2) }} €</td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.itemPrice.toFixed(2) }} €</td>
@@ -94,11 +98,10 @@ const orderItemService = new OrderItemService()
 const productService = new ProductService()
 const orderService = new OrderService()
 
-const { orderItems } = storeToRefs(cartStore);
+const { orderItems } = storeToRefs(cartStore)
 
 //orderItems.value = [...cartStore.orderItems]; // Vynútime reaktivitu
 // ✅ Správne prepojenie na `cartStore`
-
 
 // Zobrazenie sekcie s údajmi
 const showCheckoutDetails = ref<boolean>(false)
@@ -114,83 +117,72 @@ const getProductImageUrl = (imagePath: string) => {
 }
 
 // Logy na debugging
-console.log("🛒 Obsah orderItems:", orderItems.value);
-console.log("🏁 CartView sa načítava...")
-console.log("🔍 Užívateľ prihlásený:", userStore.isLoggedIn)
-console.log("👤 Užívateľské údaje:", userStore.user)
+console.log('🛒 Obsah orderItems:', orderItems.value)
+console.log('🏁 CartView sa načítava...')
+console.log('🔍 Užívateľ prihlásený:', userStore.isLoggedIn)
+console.log('👤 Užívateľské údaje:', userStore.user)
 
 // Načítanie položiek košíka pri načítaní komponentu
 
 onMounted(async () => {
-  await cartStore.loadCart();
-  console.log("📦 Načítavam položky košíka...");
-
-  // ✅ Odstrániť localStorage po prihlásení
-  if (userStore.isLoggedIn) {
-    localStorage.removeItem("cart");
-  }
+  console.log("📦 Načítavam košík...");
+  loading.value = true;
 
   try {
     const fetchedItems = await orderItemService.getOrderItems();
 
-    // ✅ Ak užívateľ je prihlásený, používame len serverové dáta
-    if (userStore.isLoggedIn) {
-      cartStore.setCartItems([...fetchedItems]);
-    } else {
-      // Ak je neprihlásený, použijeme localStorage
-      const savedCart = localStorage.getItem("cart");
-      if (savedCart) {
-        cartStore.setCartItems(JSON.parse(savedCart));
-      }
-    }
+    // 🔥 Odstránenie produktov, ktoré sú null alebo majú cenu 0
+    const validItems = fetchedItems.filter(item => item.product !== null && item.itemPrice > 0);
 
-    console.log("✅ Položky košíka načítané:", cartStore.orderItems);
+    cartStore.setCartItems(validItems);
+    console.log("✅ Odfiltrované platné položky v košíku:", validItems);
   } catch (err) {
     console.error("❌ Chyba pri načítaní košíka:", err);
+    error.value = "❌ Nepodarilo sa načítať košík.";
   } finally {
     loading.value = false;
   }
 });
 
 
+
 // Zvýšenie množstva položky
 const increaseQuantity = async (item: OrderItem) => {
   if (!item.product || item.quantity >= item.product.productQuantity) {
-    alert('Nie je možné pridať viac kusov, než je dostupné.');
-    return;
+    alert('Nie je možné pridať viac kusov, než je dostupné.')
+    return
   }
 
-  item.quantity++;
-  item.itemPrice = item.quantity * (item.product.productPrice || 0);
+  item.quantity++
+  item.itemPrice = item.quantity * (item.product.productPrice || 0)
 
   try {
-    await orderItemService.updateOrderItem(item);
-    await productService.updateProductQuantity(item.product.id, item.product.productQuantity - 1); // ✅ Aktualizujeme produkt v databáze
-    item.product.productQuantity--; // ✅ Aktualizujeme lokálne
-    cartStore.updateCart(); // ✅ Synchronizujeme store
+    await orderItemService.updateOrderItem(item)
+    await productService.updateProductQuantity(item.product.id, item.product.productQuantity - 1) // ✅ Aktualizujeme produkt v databáze
+    item.product.productQuantity-- // ✅ Aktualizujeme lokálne
+    cartStore.updateCart() // ✅ Synchronizujeme store
   } catch (err) {
-    console.error('❌ Chyba pri aktualizácii množstva produktu:', err);
+    console.error('❌ Chyba pri aktualizácii množstva produktu:', err)
   }
-};
+}
 
 const decreaseQuantity = async (item: OrderItem) => {
   if (item.quantity > 1) {
-    item.quantity--;
-    item.itemPrice = item.quantity * (item.product?.productPrice || 0);
+    item.quantity--
+    item.itemPrice = item.quantity * (item.product?.productPrice || 0)
 
     try {
-      await orderItemService.updateOrderItem(item);
-      await productService.updateProductQuantity(item.product.id, item.product.productQuantity + 1); // ✅ Aktualizujeme produkt v databáze
-      item.product.productQuantity++; // ✅ Aktualizujeme lokálne
-      cartStore.updateCart();
+      await orderItemService.updateOrderItem(item)
+      await productService.updateProductQuantity(item.product.id, item.product.productQuantity + 1) // ✅ Aktualizujeme produkt v databáze
+      item.product.productQuantity++ // ✅ Aktualizujeme lokálne
+      cartStore.updateCart()
     } catch (err) {
-      console.error('❌ Chyba pri aktualizácii množstva produktu:', err);
+      console.error('❌ Chyba pri aktualizácii množstva produktu:', err)
     }
   } else {
-    await removeItem(item.id);
+    await removeItem(item.id)
   }
-};
-
+}
 
 // Odstránenie položky z košíka
 const removeItem = async (id?: number) => {
@@ -207,7 +199,7 @@ const removeItem = async (id?: number) => {
 
 const continueToCheckout = () => {
   if (orderItems.value.length > 0) {
-    console.log("🛒 Pokračujem na checkout...")
+    console.log('🛒 Pokračujem na checkout...')
     showCheckoutDetails.value = true
   }
 }
@@ -223,13 +215,13 @@ const getNumberOfItems = async () => {
 
 // Metóda na vytvorenie objednávky
 const createOrder = async () => {
-  console.log("🔄 [CartView] Overujem používateľa...");
-  userStore.fetchUserData(); // ✅ Uistíme sa, že údaje sú aktuálne
+  console.log('🔄 [CartView] Overujem používateľa...')
+  userStore.fetchUserData() // ✅ Uistíme sa, že údaje sú aktuálne
 
   if (!userStore.user || !userStore.user.id) {
-    console.error("❌ [CartView] Používateľ nie je prihlásený!");
-    alert('❌ Chyba: Musíte byť prihlásený na vytvorenie objednávky!');
-    return;
+    console.error('❌ [CartView] Používateľ nie je prihlásený!')
+    alert('❌ Chyba: Musíte byť prihlásený na vytvorenie objednávky!')
+    return
   }
 
   const newOrder = {
@@ -241,28 +233,22 @@ const createOrder = async () => {
     })),
     orderStatus: 'CREATED',
     orderDate: new Date().toISOString().split('T')[0],
-  };
+  }
 
-  console.log('📦 [CartView] Odosielam objednávku:', newOrder);
+  console.log('📦 [CartView] Odosielam objednávku:', newOrder)
 
   try {
-    const response = await orderService.createOrder(newOrder);
-    alert(`✅ Objednávka bola úspešne vytvorená! ID: ${response.id}`);
+    const response = await orderService.createOrder(newOrder)
+    alert(`✅ Objednávka bola úspešne vytvorená! ID: ${response.id}`)
 
-    orderItems.value = [];
-    cartStore.clearCart();
-    localStorage.removeItem('cart');
+    orderItems.value = []
+    cartStore.clearCart()
+    localStorage.removeItem('cart')
   } catch (error) {
-    console.error('❌ [CartView] Chyba pri vytváraní objednávky:', error);
-    alert('❌ Nepodarilo sa vytvoriť objednávku.');
+    console.error('❌ [CartView] Chyba pri vytváraní objednávky:', error)
+    alert('❌ Nepodarilo sa vytvoriť objednávku.')
   }
-};
-
-
-
-
-
-
+}
 </script>
 
 <style scoped>
@@ -385,4 +371,3 @@ button.quantity-btn {
   margin-top: 1rem;
 }
 </style>
-

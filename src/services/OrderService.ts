@@ -15,12 +15,10 @@ export class OrderService {
     }
   }
 
-
   async createOrder(order: Order): Promise<Order> {
-    const response = await axios.post(`${orderUrl}create`, order, this.getAuthHeaders()); // ✅ Pridaná autentifikácia!
-    return response.data;
+    const response = await axios.post(`${orderUrl}create`, order, this.getAuthHeaders()) // ✅ Pridaná autentifikácia!
+    return response.data
   }
-
 
   async updateOrder(order: Order): Promise<void> {
     const response = await axios.patch(
@@ -53,5 +51,4 @@ export class OrderService {
     const response = await axios.get(`${orderUrl}order/${userId}`, this.getAuthHeaders()) // ✅ Oprava URL!
     return response.data
   }
-
 }
