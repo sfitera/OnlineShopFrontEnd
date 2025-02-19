@@ -14,8 +14,18 @@
         <!-- Sekcia na zmenu hesla -->
         <div class="password-section">
           <h2>🔑 Zmeniť heslo</h2>
-          <input v-model="currentPassword" type="password" placeholder="Aktuálne heslo" class="input-field" />
-          <input v-model="newPassword" type="password" placeholder="Nové heslo" class="input-field" />
+          <input
+            v-model="currentPassword"
+            type="password"
+            placeholder="Aktuálne heslo"
+            class="input-field"
+          />
+          <input
+            v-model="newPassword"
+            type="password"
+            placeholder="Nové heslo"
+            class="input-field"
+          />
           <button @click="changePassword" class="update-btn">Zmeniť heslo</button>
           <p v-if="message" class="message">{{ message }}</p>
         </div>
@@ -42,7 +52,7 @@ const userService = new UserService()
 
 onMounted(async () => {
   if (!userStore.user) {
-    console.log("🛠 Používateľské údaje nie sú načítané, skúšam ich načítať...")
+    console.log('🛠 Používateľské údaje nie sú načítané, skúšam ich načítať...')
     await userStore.fetchUserData()
   }
 })
@@ -56,7 +66,7 @@ const changePassword = async () => {
     await axios.patch(`http://localhost:8080/api/users/update-password`, {
       userId: userStore.user.id,
       currentPassword: currentPassword.value,
-      newPassword: newPassword.value
+      newPassword: newPassword.value,
     })
     message.value = '✅ Heslo bolo úspešne zmenené!'
     setTimeout(() => (message.value = ''), 3000)

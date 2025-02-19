@@ -20,8 +20,8 @@
         </RouterLink>
 
         <div v-if="isLoggedIn">
-        <RouterLink to="/profile" class="nav-link">Profil</RouterLink>
-        <RouterLink to="/" @click="logout" class="nav-link">Odhlásiť sa</RouterLink>
+          <RouterLink to="/profile" class="nav-link">Profil</RouterLink>
+          <RouterLink to="/" @click="logout" class="nav-link">Odhlásiť sa</RouterLink>
         </div>
         <div v-else>
           <RouterLink to="/login" class="nav-link">Prihlásiť sa</RouterLink>
@@ -56,13 +56,15 @@
 
       <!-- PRAVÝ SIDEBAR - Zobraziť len ak je užívateľ prihlásený -->
       <aside v-if="isLoggedIn" class="sidebar right-sidebar">
-          <h3>Vitaj, {{ userStore.user?.username }}</h3>
-          <p>Email: {{ userStore.user?.userEmail }}</p>
-          <RouterLink to="/profile" class="sidebar-btn">Profil</RouterLink>
-          <RouterLink to="/cart/" class="sidebar-btn">Košík</RouterLink>
-          <RouterLink to="/orders" class="sidebar-btn">Moje objednávky</RouterLink>
-          <RouterLink v-if="userStore.isAdmin" to="/admin" class="sidebar-btn">Admin Panel</RouterLink>
-          <RouterLink to="/" @click="logout" class="sidebar-btn">Odhlásiť sa</RouterLink>
+        <h3>Vitaj, {{ userStore.user?.username }}</h3>
+        <p>Email: {{ userStore.user?.userEmail }}</p>
+        <RouterLink to="/profile" class="sidebar-btn">Profil</RouterLink>
+        <RouterLink to="/cart/" class="sidebar-btn">Košík</RouterLink>
+        <RouterLink to="/orders" class="sidebar-btn">Moje objednávky</RouterLink>
+        <RouterLink v-if="userStore.isAdmin" to="/admin" class="sidebar-btn"
+          >Admin Panel</RouterLink
+        >
+        <RouterLink to="/" @click="logout" class="sidebar-btn">Odhlásiť sa</RouterLink>
       </aside>
     </div>
 
@@ -80,12 +82,12 @@ import { useUserStore } from '@/stores/userStore'
 import { Category } from '@/models/Product'
 import { UserService } from '@/services/UserService'
 import { User, UserRole } from '@/models/User'
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore'
 import { storeToRefs } from 'pinia'
 import { useCartStore } from '@/stores/cartStore'
 
 const cartStore = useCartStore()
-const authStore = useAuthStore();
+const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
@@ -101,31 +103,30 @@ const registerData = ref({ userName: '', email: '', password: '', address: '' })
 const { isLoggedIn, user } = storeToRefs(userStore)
 
 // Debugging logy
-console.log("🏠 Aplikácia sa načítava...")
-console.log("🔐 Užívateľ je prihlásený:", isLoggedIn.value)
-console.log("👤 Užívateľské údaje:", userStore.user)
+console.log('🏠 Aplikácia sa načítava...')
+console.log('🔐 Užívateľ je prihlásený:', isLoggedIn.value)
+console.log('👤 Užívateľské údaje:', userStore.user)
 
 onMounted(() => {
   userStore.fetchUserData()
   if (!isLoggedIn.value) {
     userStore.fetchUserData()
-    console.warn("🚨 Užívateľ nie je prihlásený!")
+    console.warn('🚨 Užívateľ nie je prihlásený!')
   } else {
-    console.log("✅ Užívateľ je prihlásený:", userStore.user)
+    console.log('✅ Užívateľ je prihlásený:', userStore.user)
   }
 
-  const storedUser = localStorage.getItem('user');
+  const storedUser = localStorage.getItem('user')
   if (storedUser) {
     try {
-      user.value = JSON.parse(storedUser);
-      isLoggedIn.value = true;
+      user.value = JSON.parse(storedUser)
+      isLoggedIn.value = true
     } catch (error) {
-      console.error("Chyba pri parsovaní JSON:", error);
-      localStorage.removeItem('user'); // Odstráň chybný JSON, aby sa chyba neopakovala
+      console.error('Chyba pri parsovaní JSON:', error)
+      localStorage.removeItem('user') // Odstráň chybný JSON, aby sa chyba neopakovala
     }
   }
-});
-
+})
 
 const formatCategoryName = (category: string) => {
   return category.replace('_', ' ').toUpperCase()
@@ -139,25 +140,27 @@ watch(searchQuery, () => {
   router.push({ path: '/', query: { ...route.query, search: searchQuery.value } })
 })
 
-watch(() => cartStore.cartItemCount, (newCount) => {
-  console.log("🔄 Počet položiek v košíku sa zmenil:", newCount)
-})
+watch(
+  () => cartStore.cartItemCount,
+  (newCount) => {
+    console.log('🔄 Počet položiek v košíku sa zmenil:', newCount)
+  },
+)
 
 watch(cartStore.orderItems, () => {
-  console.log("🛒 Aktualizácia počtu položiek v košíku:", cartItemCount.value);
-});
-
+  console.log('🛒 Aktualizácia počtu položiek v košíku:', cartItemCount.value)
+})
 
 const login = async () => {
   try {
     const response = await authStore.login(loginData.value.username, loginData.value.password)
 
-    console.log("✅ Prihlasovací response:", response) // 🔍 Debugging
+    console.log('✅ Prihlasovací response:', response) // 🔍 Debugging
     userStore.setUser(response)
 
     router.push('/') // Presmerovanie po prihlásení
   } catch (error) {
-    console.error("❌ Chyba pri prihlasovaní:", error)
+    console.error('❌ Chyba pri prihlasovaní:', error)
   }
 }
 
@@ -180,9 +183,8 @@ const register = async () => {
 
 const logout = () => {
   userStore.clearUser()
-  router.push("/");
-};
-
+  router.push('/')
+}
 </script>
 
 <style scoped>
@@ -211,6 +213,7 @@ const logout = () => {
     #fa8112
   );
   padding: 1rem;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .nav {
@@ -222,55 +225,16 @@ const logout = () => {
   color: white;
 }
 
-
-
 .nav-link {
   text-decoration: none;
-  color: black;
+  color: white;
   padding: 0.5rem 1rem;
+  transition: background 0.3s ease-in-out;
 }
 
 .nav-link:hover {
-  background-color: #007bff;
+  background-color: rgba(255, 255, 255, 0.2);
   border-radius: 5px;
-}
-
-/* Dropdown menu */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropbtn {
-  background-color: #343a40;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  cursor: pointer;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #343a40;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-  z-index: 1;
-}
-
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-
-.dropdown-item {
-  color: white;
-  padding: 12px 16px;
-  display: block;
-  text-decoration: none;
-}
-
-.dropdown-item:hover {
-  background-color: #007bff;
 }
 
 /* 📌 Pridáme `padding-top`, aby sa obsah neprekrýval s navbarom */
@@ -289,13 +253,16 @@ const logout = () => {
 /* 📌 Fixný ľavý sidebar */
 .left-sidebar {
   position: fixed;
-  top: 80px; /* Po headeri */
+  top: 80px;
   left: 0;
   width: 20%;
-  height: calc(100vh - 80px); /* Po zvyšok stránky */
+  height: auto;
+  max-height: calc(100vh - 80px); /* Obmedzenie na výšku okna */
   overflow-y: auto;
   background: white;
   padding: 1.5rem;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  padding-bottom: 80px; /* Priestor nad footerom */
 }
 
 /* 📌 Fixný pravý sidebar (len ak je používateľ prihlásený) */
@@ -308,14 +275,18 @@ const logout = () => {
   overflow-y: auto;
   background: white;
   padding: 1.5rem;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 📌 Hlavný obsah sa posunie doprava a vyplní stred */
 .main-content {
-  width: 60%;
+  flex: 1;
   margin-left: 20%;
   margin-right: 20%;
-  padding: 1rem;
+  padding: 2rem;
+  background: #f9f9f9;
+  min-height: calc(100vh - 80px);
+  overflow-y: auto;
 }
 
 /* Footer */
@@ -334,8 +305,13 @@ const logout = () => {
   color: white;
   text-align: center;
   padding: 1rem;
+  width: 100%;
+  position: relative;
+  bottom: 0;
+  clear: both; /* Zabraňuje prekrývaniu */
 }
 
+/* 📌 Košík - vizuálna úprava */
 .cart-badge {
   background-color: red;
   color: white;
@@ -345,18 +321,20 @@ const logout = () => {
   margin-left: 5px;
 }
 
+/* 📌 Logo */
 .logo-image {
   width: 75px;
   height: 75px;
   object-fit: cover;
   border-radius: 5px;
 }
+/* 📌 Sidebar tlačidlá */
 .sidebar-btn,
 .category-btn {
   display: block;
   margin: 1rem 0;
   padding: 0.5rem;
-  background:#00bde7;
+  background: #00bde7;
   color: white;
   text-align: left;
   border: none;
@@ -364,6 +342,7 @@ const logout = () => {
   cursor: pointer;
   font-weight: bold;
   border-radius: 8px;
+  transition: background 0.3s ease-in-out;
 }
 
 .sidebar-btn:hover,
@@ -375,13 +354,21 @@ const logout = () => {
   margin-top: 2rem;
 }
 
+/* 📌 Vyhľadávací panel */
 .search-bar {
   padding: 0.5rem;
   width: 200px;
   border-radius: 4px;
   border: 1px solid #ccc;
+  transition: box-shadow 0.3s ease-in-out;
 }
 
+.search-bar:focus {
+  box-shadow: 0px 0px 8px rgba(0, 189, 231, 0.5);
+  outline: none;
+}
+
+/* 📌 Formuláre pre registráciu a prihlásenie */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -403,6 +390,11 @@ const logout = () => {
   border-radius: 8px;
 }
 
+.auth-form button:hover {
+  background-color: #007bbf;
+}
+
+/* 📌 Odkazy */
 .link {
   color: #007bff;
   cursor: pointer;

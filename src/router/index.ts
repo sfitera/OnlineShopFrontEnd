@@ -22,12 +22,16 @@ const routes: Array<RouteRecordRaw> = [
   { path: '/products/:id', name: 'ProductDetail', component: ProductDetail, props: true },
   { path: '/register', component: RegisterView },
   { path: '/login', name: 'Login', component: LoginView },
-  { path: '/cart',name: 'Cart', component: CartView, },
-  { path: '/admin', component: AdminView, children: [
-    { path: 'products', component: AdminProducts },
-    { path: 'users', component: AdminUsers },
-    { path: 'orders', component: AdminOrders },
-  ]},
+  { path: '/cart', name: 'Cart', component: CartView },
+  {
+    path: '/admin',
+    component: AdminView,
+    children: [
+      { path: 'products', component: AdminProducts },
+      { path: 'users', component: AdminUsers },
+      { path: 'orders', component: AdminOrders },
+    ],
+  },
   {
     path: '/profile',
     name: 'Profile',
@@ -40,7 +44,7 @@ const routes: Array<RouteRecordRaw> = [
     component: OrderView,
     meta: { requiresAuth: true },
   },
-  {path: '/admin', name:'Admin', component: AdminView}
+  { path: '/admin', name: 'Admin', component: AdminView },
 ]
 
 const router = createRouter({
@@ -48,7 +52,6 @@ const router = createRouter({
   routes,
 })
 
-// 🛑 Chránené route-y
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {

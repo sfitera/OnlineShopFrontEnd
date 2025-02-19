@@ -2,8 +2,18 @@
   <section class="auth-container">
     <h1>Prihlásenie</h1>
     <div class="auth-form">
-      <input v-model="loginData.username" type="text" placeholder="Používateľské meno" @keydown.enter="login"/>
-      <input v-model="loginData.password" type="password" placeholder="Heslo" @keydown.enter="login" />
+      <input
+        v-model="loginData.username"
+        type="text"
+        placeholder="Používateľské meno"
+        @keydown.enter="login"
+      />
+      <input
+        v-model="loginData.password"
+        type="password"
+        placeholder="Heslo"
+        @keydown.enter="login"
+      />
       <button @click="login">Prihlásiť sa</button>
       <p>Nemáte účet? <router-link to="/register" class="link">Registrovať</router-link></p>
     </div>
@@ -15,9 +25,9 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { UserService } from '@/services/UserService'
 import { useUserStore } from '@/stores/userStore'
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore'
 
-const authStore = useAuthStore();
+const authStore = useAuthStore()
 const userService = new UserService()
 const userStore = useUserStore()
 const router = useRouter()
@@ -28,7 +38,7 @@ const login = async () => {
     await authStore.login(loginData.value.username, loginData.value.password)
     router.push('/') // Presmerovanie po prihlásení
   } catch (error) {
-    console.error("❌ Chyba pri prihlasovaní:", error)
+    console.error('❌ Chyba pri prihlasovaní:', error)
   }
 }
 </script>

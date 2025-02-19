@@ -4,32 +4,28 @@ import { Product } from '../models/Product'
 const productUrl = 'http://localhost:8080/api/products/'
 
 export class ProductService {
-
-    async addProduct(product: Product): Promise<Product> {
-      try {
-        const response = await axios.post(`${productUrl}add`, product, {
-          headers: { 'Content-Type': 'application/json' },
-        });
-        console.log("✅ Produkt úspešne pridaný:", response.data);
-        return response.data;
-      } catch (error) {
-        console.error("❌ Chyba pri pridávaní produktu:", error);
-        throw error;
-      }
-    }
-
-
-
-  async updateProduct(product: Product, newQuantity: number): Promise<void> {
+  async addProduct(product: Product): Promise<Product> {
     try {
-      const updatedProduct = { ...product, productQuantity: newQuantity }; // ✅ Posielame celý objekt
-      await axios.patch(`${productUrl}update/${product.id}`, updatedProduct);
-      console.log(`✅ Množstvo produktu ${product.id} aktualizované na ${newQuantity}`);
+      const response = await axios.post(`${productUrl}add`, product, {
+        headers: { 'Content-Type': 'application/json' },
+      })
+      console.log('✅ Produkt úspešne pridaný:', response.data)
+      return response.data
     } catch (error) {
-      console.error(`❌ Chyba pri aktualizácii množstva produktu ${product.id}:`, error);
+      console.error('❌ Chyba pri pridávaní produktu:', error)
+      throw error
     }
   }
 
+  async updateProduct(product: Product, newQuantity: number): Promise<void> {
+    try {
+      const updatedProduct = { ...product, productQuantity: newQuantity } // ✅ Posielame celý objekt
+      await axios.patch(`${productUrl}update/${product.id}`, updatedProduct)
+      console.log(`✅ Množstvo produktu ${product.id} aktualizované na ${newQuantity}`)
+    } catch (error) {
+      console.error(`❌ Chyba pri aktualizácii množstva produktu ${product.id}:`, error)
+    }
+  }
 
   async deleteProduct(id: number): Promise<void> {
     await axios.delete(`${productUrl}delete/${id}`, {
@@ -108,22 +104,15 @@ export class ProductService {
   }
 
   async updateProductQuantity(id: number, quantity: number): Promise<Product> {
-    const response = await axios.patch(`${productUrl}update-quantity/${id}?quantity=${quantity}`, null, {
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await axios.patch(
+      `${productUrl}update-quantity/${id}?quantity=${quantity}`,
+      null,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       },
-    })
+    )
     return response.data
   }
-
-
-
-
-
-
-
-
-
-
-
 }

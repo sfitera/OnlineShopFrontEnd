@@ -10,20 +10,19 @@ export class User {
   userPassword: string
   userAddress: string
   userEmail: string
-  userRoles: UserRole[];
+  userRoles: UserRole[]
 
   constructor(
     username: string,
     userPassword: string,
     userAddress: string,
     userEmail: string,
-    userRoles: UserRole[] = [UserRole.USER], // 🔥 Predvolene priradíme rolu USER
+    userRoles: UserRole[] = [UserRole.USER],
   ) {
     this.username = username
     this.userPassword = userPassword
     this.userAddress = userAddress
     this.userEmail = userEmail
-    this.userRoles = userRoles // ✅ Ukladáme zoznam rolí
+    this.userRoles = userRoles
   }
-
 }
