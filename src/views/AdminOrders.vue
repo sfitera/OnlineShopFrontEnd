@@ -22,6 +22,9 @@
           </td>
           <td>
             <div class="action-buttons">
+              <button @click="toggleDetails(order.id)" class="action-button">
+                {{ expandedOrder === order.id ? 'Skryť' : 'Detaily' }}
+              </button>
               <button @click="editOrder(order)" class="action-button">Upraviť</button>
               <button @click="deleteOrder(order.id)" class="action-button delete-button">
                 Zmazať
@@ -31,6 +34,40 @@
         </tr>
       </tbody>
     </table>
+
+        <!-- Detaily objednávky -->
+        <div v-if="expandedOrder" class="order-details">
+      <h2>🛒 Detaily objednávky #{{ expandedOrder }}</h2>
+      <table class="details-table">
+        <thead>
+          <tr>
+            <th>Obrázok</th>
+            <th>Produkt</th>
+            <th>Cena za kus</th>
+            <th>Množstvo</th>
+            <th>Celková cena</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in selectedOrder?.orderItems" :key="item.id">
+            <td>
+              <RouterLink :to="`/products/${item.product?.id}`">
+                <img :src="getProductImageUrl(item.product?.productImage)" alt="Produktový obrázok"
+                  class="product-thumbnail"/>
+              </RouterLink>
+            </td>
+            <td>
+              <RouterLink :to="`/products/${item.product?.id}`" class="product-link">
+                {{ item.product?.productName }}
+              </RouterLink>
+            </td>
+            <td>{{ item.product?.productPrice.toFixed(2) }} €</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.itemPrice.toFixed(2) }} €</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- MODÁLNE OKNO NA ÚPRAVU -->
     <div v-if="showEditModal" class="modal">
@@ -51,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { OrderService } from '@/services/OrderService'
 import { Order } from '@/models/Order'
 
@@ -59,6 +96,7 @@ const orderService = new OrderService()
 const orders = ref<Order[]>([])
 const showEditModal = ref(false)
 const editedOrder = ref<Order | null>(null)
+const expandedOrder = ref<number | null>(null)
 
 // ✅ Načítanie objednávok zo servera
 const fetchOrders = async () => {
@@ -105,13 +143,27 @@ const deleteOrder = async (id: number) => {
   }
 }
 
-// ✅ Formátovanie dátumu
+// 📌 Formátovanie dátumu
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('sk-SK', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   })
+}
+// 📌 Získanie aktuálne vybratej objednávky
+const selectedOrder = computed(() =>
+  orders.value.find((order) => order.id === expandedOrder.value)
+)
+
+// 📌 Prepínanie detailov objednávky
+const toggleDetails = (orderId: number) => {
+  expandedOrder.value = expandedOrder.value === orderId ? null : orderId
+}
+
+// 📌 Generovanie URL pre obrázok
+const getProductImageUrl = (imagePath: string) => {
+  return `http://localhost:8080/${imagePath}`
 }
 
 const statusClass = (status: string) => {
@@ -125,7 +177,13 @@ const statusClass = (status: string) => {
 }
 
 
-onMounted(fetchOrders)
+onMounted(async () => {
+  try {
+    orders.value = await orderService.getOrders()
+  } catch (error) {
+    console.error('❌ Chyba pri načítaní objednávok:', error)
+  }
+})
 </script>
 
 <style scoped>
@@ -188,6 +246,54 @@ onMounted(fetchOrders)
 
 .delete-button:hover {
   background-color: #c50b0b;
+}
+
+.order-details {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 🖼 Produktové obrázky */
+.product-thumbnail {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.product-thumbnail:hover {
+  transform: scale(1.1);
+}
+
+/* 📝 Tabuľka detailov objednávky */
+.details-table {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.details-table th {
+  background: #00bde7;
+  color: white;
+  padding: 1rem;
+}
+
+.details-table td {
+  border-bottom: 1px solid #ddd;
+  padding: 1rem;
+  text-align: center;
+}
+
+.details-table tr:hover {
+  background-color: #f9f9f9;
+  transition: background 0.2s ease-in-out;
 }
 
 /* ✅ Štýl modálneho okna */

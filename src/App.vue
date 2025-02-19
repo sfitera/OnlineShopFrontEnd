@@ -211,6 +211,7 @@ const logout = () => {
     #fa8112
   );
   padding: 1rem;
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
 }
 
 .nav {
@@ -226,51 +227,14 @@ const logout = () => {
 
 .nav-link {
   text-decoration: none;
-  color: black;
+  color: white;
   padding: 0.5rem 1rem;
+  transition: background 0.3s ease-in-out;
 }
 
 .nav-link:hover {
-  background-color: #007bff;
+  background-color: rgba(255, 255, 255, 0.2);
   border-radius: 5px;
-}
-
-/* Dropdown menu */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropbtn {
-  background-color: #343a40;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  cursor: pointer;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #343a40;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-  z-index: 1;
-}
-
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-
-.dropdown-item {
-  color: white;
-  padding: 12px 16px;
-  display: block;
-  text-decoration: none;
-}
-
-.dropdown-item:hover {
-  background-color: #007bff;
 }
 
 /* 📌 Pridáme `padding-top`, aby sa obsah neprekrýval s navbarom */
@@ -289,13 +253,16 @@ const logout = () => {
 /* 📌 Fixný ľavý sidebar */
 .left-sidebar {
   position: fixed;
-  top: 80px; /* Po headeri */
+  top: 80px;
   left: 0;
   width: 20%;
-  height: calc(100vh - 80px); /* Po zvyšok stránky */
+  height: auto;
+  max-height: calc(100vh - 80px); /* Obmedzenie na výšku okna */
   overflow-y: auto;
   background: white;
   padding: 1.5rem;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  padding-bottom: 80px; /* Priestor nad footerom */
 }
 
 /* 📌 Fixný pravý sidebar (len ak je používateľ prihlásený) */
@@ -308,34 +275,33 @@ const logout = () => {
   overflow-y: auto;
   background: white;
   padding: 1.5rem;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 📌 Hlavný obsah sa posunie doprava a vyplní stred */
 .main-content {
-  width: 60%;
+  flex: 1;
   margin-left: 20%;
   margin-right: 20%;
-  padding: 1rem;
+  padding: 2rem;
+  background: #f9f9f9;
+  min-height: calc(100vh - 80px);
+  overflow-y: auto;
 }
 
 /* Footer */
 .footer {
-  background: linear-gradient(
-    45deg,
-    #1a1927,
-    #1a1927,
-    #fed40a,
-    #87d72f,
-    #00bde7,
-    #cd0d63,
-    #e81111,
-    #fa8112
-  );
+  background: linear-gradient(45deg, #1a1927, #1a1927, #fed40a, #87d72f, #00bde7, #cd0d63, #e81111, #fa8112);
   color: white;
   text-align: center;
   padding: 1rem;
+  width: 100%;
+  position: relative;
+  bottom: 0;
+  clear: both; /* Zabraňuje prekrývaniu */
 }
 
+/* 📌 Košík - vizuálna úprava */
 .cart-badge {
   background-color: red;
   color: white;
@@ -345,18 +311,20 @@ const logout = () => {
   margin-left: 5px;
 }
 
+/* 📌 Logo */
 .logo-image {
   width: 75px;
   height: 75px;
   object-fit: cover;
   border-radius: 5px;
 }
+/* 📌 Sidebar tlačidlá */
 .sidebar-btn,
 .category-btn {
   display: block;
   margin: 1rem 0;
   padding: 0.5rem;
-  background:#00bde7;
+  background: #00bde7;
   color: white;
   text-align: left;
   border: none;
@@ -364,6 +332,7 @@ const logout = () => {
   cursor: pointer;
   font-weight: bold;
   border-radius: 8px;
+  transition: background 0.3s ease-in-out;
 }
 
 .sidebar-btn:hover,
@@ -375,13 +344,21 @@ const logout = () => {
   margin-top: 2rem;
 }
 
+/* 📌 Vyhľadávací panel */
 .search-bar {
   padding: 0.5rem;
   width: 200px;
   border-radius: 4px;
   border: 1px solid #ccc;
+  transition: box-shadow 0.3s ease-in-out;
 }
 
+.search-bar:focus {
+  box-shadow: 0px 0px 8px rgba(0, 189, 231, 0.5);
+  outline: none;
+}
+
+/* 📌 Formuláre pre registráciu a prihlásenie */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -403,6 +380,11 @@ const logout = () => {
   border-radius: 8px;
 }
 
+.auth-form button:hover {
+  background-color: #007bbf;
+}
+
+/* 📌 Odkazy */
 .link {
   color: #007bff;
   cursor: pointer;
