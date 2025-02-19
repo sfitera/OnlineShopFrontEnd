@@ -125,20 +125,31 @@ console.log('👤 Užívateľské údaje:', userStore.user)
 // Načítanie položiek košíka pri načítaní komponentu
 
 onMounted(async () => {
-  console.log("📦 Načítavam košík...");
-  loading.value = true;
+  await cartStore.loadCart();
+  console.log("📦 Načítavam položky košíka...");
+
+  // ✅ Odstrániť localStorage po prihlásení
+  if (userStore.isLoggedIn) {
+    localStorage.removeItem("cart");
+  }
 
   try {
     const fetchedItems = await orderItemService.getOrderItems();
 
-    // 🔥 Odstránenie produktov, ktoré sú null alebo majú cenu 0
-    const validItems = fetchedItems.filter(item => item.product !== null && item.itemPrice > 0);
+// ✅ Ak užívateľ je prihlásený, používame len serverové dáta
+if (userStore.isLoggedIn) {
+      cartStore.setCartItems([...fetchedItems]);
+    } else {
+      // Ak je neprihlásený, použijeme localStorage
+      const savedCart = localStorage.getItem("cart");
+      if (savedCart) {
+        cartStore.setCartItems(JSON.parse(savedCart));
+      }
+    }
 
-    cartStore.setCartItems(validItems);
-    console.log("✅ Odfiltrované platné položky v košíku:", validItems);
+    console.log("✅ Položky košíka načítané:", cartStore.orderItems);
   } catch (err) {
     console.error("❌ Chyba pri načítaní košíka:", err);
-    error.value = "❌ Nepodarilo sa načítať košík.";
   } finally {
     loading.value = false;
   }
